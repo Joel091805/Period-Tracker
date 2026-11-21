@@ -1,0 +1,9 @@
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Personal test exports & backups (CRITICAL: never commit real cycle data)
+*.enc.json
+flo_export*.json
+test-data/
