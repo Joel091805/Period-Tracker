@@ -211,7 +211,6 @@ const dom = {
 
   // Home (Cycle) Dashboard
   greetingTitle: document.getElementById('greeting-title'),
-  greetingDate: document.getElementById('greeting-date'),
   weekStrip: document.getElementById('week-strip'),
   bentoRow: document.getElementById('bento-row'),
   bentoOvulationVal: document.getElementById('bento-ovulation-val'),
@@ -239,13 +238,11 @@ const dom = {
 
   // Continuous Calendar
   calActiveMonth: document.getElementById('cal-active-month'),
-  calHeaderSubtitle: document.getElementById('cal-header-subtitle'),
   calScrollFeed: document.getElementById('cal-scroll-feed'),
   calMonthsList: document.getElementById('cal-months-list'),
   btnCalToday: document.getElementById('btn-cal-today'),
 
   // Insights
-  insightsHeaderSubtitle: document.getElementById('insights-header-subtitle'),
   insightsHeaderPill: document.getElementById('insights-header-pill'),
   metricAvgCycle: document.getElementById('metric-avg-cycle'),
   metricAvgPeriod: document.getElementById('metric-avg-period'),
@@ -792,7 +789,6 @@ function getInsightsPeriodStats(vaultState, forecast) {
 function renderTodayView(vaultState, forecast, todayStr) {
   const name = getDisplayName(vaultState);
   dom.greetingTitle.textContent = `Hello, ${name}!`;
-  dom.greetingDate.textContent = formatLongDate(uiState.selectedDate);
 
   renderWeekStrip(forecast, todayStr);
   renderBentoMetrics(vaultState, forecast, todayStr);
@@ -1080,7 +1076,6 @@ function initTodayActions() {
     if (!pill) return;
     soundEngine.playSfx('tap');
     uiState.selectedDate = pill.dataset.date;
-    dom.greetingDate.textContent = formatLongDate(uiState.selectedDate);
     if (uiState.latestForecast) {
       renderWeekStrip(uiState.latestForecast, getTodayIsoDate());
     }
@@ -1253,12 +1248,6 @@ function getMonthPeriodBadge(
 }
 
 function renderCalendarView(vaultState, forecast, todayStr) {
-  const phaseMeta = PHASE_META[forecast.currentPhase || 'unknown'] || PHASE_META.unknown;
-  dom.calHeaderSubtitle.textContent =
-    forecast.hasData && forecast.currentCycleDay
-      ? `Cycle Day ${forecast.currentCycleDay} • ${phaseMeta.label}`
-      : 'Tap any day to log';
-
   const todayDate = parseIsoDate(todayStr);
   const baseYear = todayDate.getFullYear();
   const baseMonth = todayDate.getMonth();
@@ -1549,12 +1538,7 @@ function initCalendar() {
    ========================================================================== */
 function renderInsightsView(vaultState, forecast) {
   const periodStats = getInsightsPeriodStats(vaultState, forecast);
-  const totalLoggedCycles = (forecast.cycles || []).length;
 
-  dom.insightsHeaderSubtitle.textContent =
-    totalLoggedCycles > 0
-      ? `Based on ${totalLoggedCycles} logged ${totalLoggedCycles === 1 ? 'cycle' : 'cycles'}`
-      : 'Your personal cycle rhythm';
   dom.insightsHeaderPill.textContent = `${forecast.predictedCycleLength}d Cycle`;
 
   dom.metricAvgCycle.textContent = `${forecast.predictedCycleLength}d`;

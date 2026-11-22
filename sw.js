@@ -3,7 +3,7 @@
  * Uses relative ./ paths for localhost and GitHub Pages subpath compatibility.
  */
 
-const CACHE_NAME = 'purin-cycle-v4';
+const CACHE_NAME = 'purin-cycle-v5';
 
 const PRECACHE_URLS = [
   './',
