@@ -362,6 +362,15 @@ textarea:focus-visible {
 }
 
 /* Act 2 & 4: Pompompurin Waving (165px) */
+.splash-mascot-wrap {
+  position: relative;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center bottom;
+}
+
 .splash-mascot {
   position: relative;
   z-index: 4;
@@ -512,6 +521,24 @@ textarea:focus-visible {
   transform-origin: 0px 4px;
   transform: rotate(-12deg);
   animation: splash-beret-wiggle 0.48s var(--spring-bounce) 2.63s both;
+}
+
+.splash-sound-cue {
+  margin-top: 14px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: #FFF9E6;
+  border: 2px solid #4A3222;
+  box-shadow: 0 3px 0 #4A3222;
+  color: #4A3222;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: splash-cue-bob 1.8s ease-in-out infinite;
+  will-change: transform;
 }
 
 /* --------------------------------------------------------------------------
@@ -2785,6 +2812,11 @@ textarea:focus-visible {
 @keyframes bgm-note-pulse {
   0%, 100% { transform: scale(1) rotate(0deg); }
   50%      { transform: scale(1.12) rotate(-6deg); }
+}
+
+@keyframes splash-cue-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
