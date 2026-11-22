@@ -275,6 +275,7 @@ const dom = {
   fileImportBackup: document.getElementById('file-import-backup'),
   btnChangePin: document.getElementById('btn-change-pin'),
   btnPanicWipe: document.getElementById('btn-panic-wipe'),
+  pwaOfflineBadge: document.getElementById('pwa-offline-badge'),
 
   // Drawer
   drawerBackdrop: document.getElementById('log-drawer-backdrop'),
@@ -2405,9 +2406,54 @@ function initDrawer() {
 }
 
 /* ==========================================================================
-   11. Boot
+   11. Offline Service Worker Registration (Phase 4 PWA)
+   ========================================================================== */
+function setOfflineBadge(label, isReady = false) {
+  if (!dom.pwaOfflineBadge) return;
+  dom.pwaOfflineBadge.textContent = label;
+  dom.pwaOfflineBadge.classList.toggle('is-ready', isReady);
+}
+
+function initServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    setOfflineBadge('Offline Unsupported', false);
+    return;
+  }
+
+  const markReady = () => setOfflineBadge('Offline Ready ✓', true);
+
+  if (navigator.serviceWorker.controller) {
+    markReady();
+  }
+
+  navigator.serviceWorker
+    .register('./sw.js', { scope: './' })
+    .then((registration) => {
+      if (registration.active) {
+        markReady();
+        return;
+      }
+      const worker = registration.installing || registration.waiting;
+      if (worker) {
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'activated') {
+            markReady();
+          }
+        });
+      }
+      return navigator.serviceWorker.ready.then(markReady);
+    })
+    .catch((err) => {
+      console.error('[Purin Cycle] Service Worker registration failed:', err);
+      setOfflineBadge('Offline Unavailable', false);
+    });
+}
+
+/* ==========================================================================
+   12. Boot
    ========================================================================== */
 async function boot() {
+  initServiceWorker();
   initSplash();
   initPinGate();
   initAutoLock();

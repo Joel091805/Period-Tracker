@@ -1948,6 +1948,51 @@ textarea:focus-visible {
   font-size: 15px;
 }
 
+.pwa-status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pwa-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pwa-status-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.pwa-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--ink-cocoa);
+  background: var(--bg-pill-soft);
+  color: var(--text-primary);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.pwa-status-badge.is-ready {
+  background: var(--phase-fertile-tint);
+  border-color: var(--phase-fertile-text);
+  color: var(--phase-fertile-text);
+}
+
+.pwa-ios-tip {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
 /* --------------------------------------------------------------------------
    11. Floating Bottom Navigation Dock with Sliding Pill Indicator
    -------------------------------------------------------------------------- */

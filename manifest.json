@@ -1,17 +1,31 @@
 {
-  "name": "Purin Cycle — Private Period Tracker",
+  "name": "Purin Cycle",
   "short_name": "Purin Cycle",
-  "description": "Local-first, encrypted period and cycle tracker.",
-  "start_url": "./index.html",
+  "description": "Private, local-first Pompompurin cycle tracker",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#F7D358",
-  "theme_color": "#F7D358",
   "orientation": "portrait",
+  "background_color": "#FFFDF5",
+  "theme_color": "#F7D358",
   "icons": [
     {
-      "src": "assets/icons/pompom/pompom_waving.png",
+      "src": "./assets/icons/pwa/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/pwa/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
