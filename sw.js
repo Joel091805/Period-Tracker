@@ -3,7 +3,7 @@
  * Uses relative ./ paths for localhost and GitHub Pages subpath compatibility.
  */
 
-const CACHE_NAME = 'purin-cycle-v1';
+const CACHE_NAME = 'purin-cycle-v2';
 
 const PRECACHE_URLS = [
   './',
@@ -11,6 +11,7 @@ const PRECACHE_URLS = [
   './manifest.json',
   './css/styles.css',
   './js/app.js',
+  './js/soundEngine.js',
   './js/predictionEngine.js',
   './js/floImporter.js',
   './js/vaultCrypto.js',

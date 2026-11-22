@@ -42,6 +42,7 @@ import {
 } from './predictionEngine.js';
 
 import { importFloData } from './floImporter.js';
+import { soundEngine } from './soundEngine.js';
 
 /* ==========================================================================
    Constants & Pompompurin Phase Presentation Map
@@ -200,6 +201,7 @@ const dom = {
 
   // Main Shell & Dock
   appMain: document.getElementById('app-main'),
+  btnToggleBgm: document.getElementById('btn-toggle-bgm'),
   lockButtons: Array.from(document.querySelectorAll('#btn-lock-vault, [data-action="lock-vault"]')),
   dockPill: document.getElementById('dock-pill'),
   dockIndicator: document.getElementById('dock-indicator'),
@@ -266,6 +268,9 @@ const dom = {
   // Settings
   settingName: document.getElementById('setting-name'),
   settingShowConception: document.getElementById('setting-show-conception'),
+  settingSfxEnabled: document.getElementById('setting-sfx-enabled'),
+  settingBgmEnabled: document.getElementById('setting-bgm-enabled'),
+  btnTestSound: document.getElementById('btn-test-sound'),
   rowAutoLock: document.getElementById('row-auto-lock'),
   settingPinLock: document.getElementById('setting-pin-lock'),
   btnImportFlo: document.getElementById('btn-import-flo'),
@@ -482,6 +487,7 @@ function renderPinDots(popIndex = -1) {
 }
 
 function triggerPinError(message) {
+  soundEngine.playSfx('error');
   dom.pinError.textContent = message;
   dom.pinDots.classList.remove('is-shaking');
   void dom.pinDots.offsetWidth;
@@ -495,18 +501,21 @@ function handlePinKey(key) {
   dom.pinError.textContent = '';
 
   if (key === 'clear') {
+    soundEngine.playSfx('tap');
     uiState.pinBuffer = '';
     renderPinDots(-1);
     return;
   }
 
   if (key === 'backspace') {
+    soundEngine.playSfx('tap');
     uiState.pinBuffer = uiState.pinBuffer.slice(0, -1);
     renderPinDots(-1);
     return;
   }
 
   if (/^\d$/.test(key) && uiState.pinBuffer.length < PIN_LENGTH) {
+    soundEngine.playSfx('tap');
     const filledIdx = uiState.pinBuffer.length;
     uiState.pinBuffer += key;
     renderPinDots(filledIdx);
@@ -727,6 +736,7 @@ function renderApp() {
 
   // Update active theme phase on root shell
   dom.appShell.dataset.phase = forecast.currentPhase || 'unknown';
+  syncAudioSettingsUI(vaultState);
 
   renderTodayView(vaultState, forecast, todayStr);
   renderCalendarView(vaultState, forecast, todayStr);
@@ -997,8 +1007,34 @@ function renderCycleRing(vaultState, forecast) {
 }
 
 function initTodayActions() {
+  if (dom.btnToggleBgm) {
+    dom.btnToggleBgm.addEventListener('click', async () => {
+      if (!isVaultUnlocked()) return;
+      const currentBgm = Boolean(getVaultState().settings?.bgmEnabled);
+      const nextBgm = !currentBgm;
+
+      soundEngine.setBgmEnabled(nextBgm);
+      dom.btnToggleBgm.classList.toggle('is-playing', nextBgm);
+      dom.btnToggleBgm.setAttribute('aria-pressed', String(nextBgm));
+      if (dom.settingBgmEnabled) {
+        dom.settingBgmEnabled.checked = nextBgm;
+      }
+      triggerJellyPop(dom.btnToggleBgm);
+
+      try {
+        await commitVaultState((draft) => {
+          draft.settings.bgmEnabled = nextBgm;
+        });
+        showToast(nextBgm ? 'Cozy music on ♪' : 'Music paused');
+      } catch (err) {
+        showToast(err.message || 'Could not update music setting');
+      }
+    });
+  }
+
   // Interactive Pompompurin jellyPop + comforting speech bubble cycler
   dom.btnMascotTap.addEventListener('click', () => {
+    soundEngine.playSfx('mascot');
     const phase = uiState.latestForecast?.currentPhase || 'unknown';
     const meta = PHASE_META[phase] || PHASE_META.unknown;
     const notes = meta.notes || [];
@@ -1024,6 +1060,7 @@ function initTodayActions() {
   dom.weekStrip.addEventListener('click', (e) => {
     const pill = e.target.closest('[data-date]');
     if (!pill) return;
+    soundEngine.playSfx('tap');
     uiState.selectedDate = pill.dataset.date;
     dom.greetingDate.textContent = formatLongDate(uiState.selectedDate);
     if (uiState.latestForecast) {
@@ -1034,6 +1071,7 @@ function initTodayActions() {
 
   dom.btnLogPeriod.addEventListener('click', async () => {
     if (!isVaultUnlocked() || dom.btnLogPeriod.disabled) return;
+    soundEngine.playSfx('period');
     const todayStr = getTodayIsoDate();
     const wasPeriodToday = Boolean(
       uiState.latestForecast?.calendarMap?.[todayStr]?.isLoggedPeriod
@@ -1465,6 +1503,7 @@ function initCalendar() {
   );
 
   dom.btnCalToday.addEventListener('click', () => {
+    soundEngine.playSfx('tap');
     const today = getTodayIsoDate();
     uiState.calendarSelectedDate = today;
     triggerJellyPop(dom.btnCalToday);
@@ -1479,6 +1518,7 @@ function initCalendar() {
   dom.calMonthsList.addEventListener('click', (e) => {
     const cell = e.target.closest('.cal-cell[data-date]');
     if (!cell || !isVaultUnlocked()) return;
+    soundEngine.playSfx('tap');
     const iso = cell.dataset.date;
     uiState.calendarSelectedDate = iso;
     triggerJellyPop(cell);
@@ -1680,12 +1720,33 @@ function syncPinLockVisibility() {
   }
 }
 
+function syncAudioSettingsUI(vaultState) {
+  const s = vaultState?.settings || {};
+  const sfxEnabled = s.sfxEnabled !== false;
+  const bgmEnabled = Boolean(s.bgmEnabled);
+
+  soundEngine.setSfxEnabled(sfxEnabled);
+  soundEngine.setBgmEnabled(bgmEnabled);
+
+  if (dom.settingSfxEnabled) {
+    dom.settingSfxEnabled.checked = sfxEnabled;
+  }
+  if (dom.settingBgmEnabled) {
+    dom.settingBgmEnabled.checked = bgmEnabled;
+  }
+  if (dom.btnToggleBgm) {
+    dom.btnToggleBgm.classList.toggle('is-playing', bgmEnabled);
+    dom.btnToggleBgm.setAttribute('aria-pressed', String(bgmEnabled));
+  }
+}
+
 function renderSettingsView(vaultState) {
   const s = vaultState.settings || {};
   if (document.activeElement !== dom.settingName) {
     dom.settingName.value = s.userName || '';
   }
   dom.settingShowConception.checked = s.showConceptionChance !== false;
+  syncAudioSettingsUI(vaultState);
   syncPinLockVisibility();
 
   Object.keys(SETTING_LIMITS).forEach((key) => {
@@ -1727,6 +1788,45 @@ function initSettings() {
     });
     renderApp();
   });
+
+  if (dom.settingSfxEnabled) {
+    dom.settingSfxEnabled.addEventListener('change', async () => {
+      if (!isVaultUnlocked()) return;
+      const enabled = dom.settingSfxEnabled.checked;
+      soundEngine.setSfxEnabled(enabled);
+      if (enabled) {
+        soundEngine.playSfx('chip');
+      }
+      await commitVaultState((draft) => {
+        draft.settings.sfxEnabled = enabled;
+      });
+      renderApp();
+    });
+  }
+
+  if (dom.settingBgmEnabled) {
+    dom.settingBgmEnabled.addEventListener('change', async () => {
+      if (!isVaultUnlocked()) return;
+      const enabled = dom.settingBgmEnabled.checked;
+      soundEngine.setBgmEnabled(enabled);
+      if (dom.btnToggleBgm) {
+        dom.btnToggleBgm.classList.toggle('is-playing', enabled);
+        dom.btnToggleBgm.setAttribute('aria-pressed', String(enabled));
+      }
+      await commitVaultState((draft) => {
+        draft.settings.bgmEnabled = enabled;
+      });
+      renderApp();
+      showToast(enabled ? 'Cozy music on ♪' : 'Music paused');
+    });
+  }
+
+  if (dom.btnTestSound) {
+    dom.btnTestSound.addEventListener('click', () => {
+      triggerJellyPop(dom.btnTestSound);
+      soundEngine.playSfx('save', { force: true });
+    });
+  }
 
   document.querySelectorAll('.stepper').forEach((stepper) => {
     const key = stepper.dataset.setting;
@@ -2028,12 +2128,14 @@ function initModal() {
         return;
       }
       if (typeof result === 'string' && result.length > 0) {
+        soundEngine.playSfx('error');
         dom.modalError.textContent = result;
         dom.btnModalConfirm.disabled = false;
       } else {
         closeModal();
       }
     } catch (err) {
+      soundEngine.playSfx('error');
       dom.modalError.textContent = err.message || 'Operation failed.';
       dom.btnModalConfirm.disabled = false;
     }
@@ -2086,7 +2188,10 @@ function switchTab(tabName) {
 
 function initDock() {
   dom.dockTabs.forEach((tab) => {
-    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    tab.addEventListener('click', () => {
+      soundEngine.playSfx('tap');
+      switchTab(tab.dataset.tab);
+    });
   });
 
   window.addEventListener('resize', () => {
@@ -2264,6 +2369,7 @@ function openLogDrawer(isoDate = uiState.selectedDate) {
 
   if (uiState.drawerOpen) return;
   uiState.drawerOpen = true;
+  soundEngine.playSfx('drawer');
   dom.btnQuickLog.classList.add('is-open');
   dom.drawerBackdrop.hidden = false;
   dom.logDrawer.inert = false;
@@ -2326,6 +2432,7 @@ function initDrawer() {
   dom.drawerFlowGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-flow]');
     if (!btn) return;
+    soundEngine.playSfx('chip');
     dom.drawerFlowGroup.querySelectorAll('.seg-btn').forEach((b) => {
       const active = b === btn;
       b.classList.toggle('seg-btn--active', active);
@@ -2338,6 +2445,7 @@ function initDrawer() {
   dom.drawerSymptomsGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-symptom]');
     if (!btn) return;
+    soundEngine.playSfx('chip');
     const selected = btn.classList.toggle('is-selected');
     btn.setAttribute('aria-pressed', String(selected));
     triggerJellyPop(btn);
@@ -2348,6 +2456,7 @@ function initDrawer() {
   dom.drawerMoodGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('.chip-btn');
     if (!btn) return;
+    soundEngine.playSfx('chip');
     const wasSelected = btn.classList.contains('is-selected');
     dom.drawerMoodGroup.querySelectorAll('.chip-btn').forEach((b) => {
       b.classList.remove('is-selected');
@@ -2394,6 +2503,7 @@ function initDrawer() {
         });
       });
       uiState.speechOverrideKey = null;
+      soundEngine.playSfx('save');
       closeLogDrawer(false);
       renderApp();
       showToast('Entry saved');
