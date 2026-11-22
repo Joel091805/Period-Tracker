@@ -1,7 +1,6 @@
 /**
- * Purin Cycle — Phase 3 Production UI & Integration Controller
- * Connects Phase 1 (predictionEngine.js, floImporter.js) and Phase 2 (vaultCrypto.js)
- * to the mobile-first native app shell.
+ * Purin Cycle — Pompompurin World Tactile UI & Integration Controller (Phase 3)
+ * Connects Phase 1 (predictionEngine.js, floImporter.js) and Phase 2 (vaultCrypto.js).
  */
 
 import {
@@ -40,48 +39,93 @@ import {
 import { importFloData } from './floImporter.js';
 
 /* ==========================================================================
-   Constants & Phase Presentation Map
+   Constants & Pompompurin Phase Presentation Map
    ========================================================================== */
-const SPLASH_FADE_MS = 1200;
-const RING_RADIUS = 106;
+const SPLASH_FADE_MS = 5000;
+const RING_CENTER = 112;
+const RING_RADIUS = 96;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+const CALENDAR_MONTHS_PAST = 6;
+const CALENDAR_MONTHS_FUTURE = 4;
 
 const PHASE_META = Object.freeze({
   menstrual: {
     label: 'Menstrual Phase',
     sprite: 'assets/icons/pompom/pompom_sleeping.png',
     spriteClass: 'mascot-menstrual',
+    notes: [
+      (name) => `Cozy blanket mode! Purin brought warm snacks for you, ${name}~`,
+      (name) => `Take it nice and slow today, ${name}. Warm tea & naps are mandatory!`,
+      (name) => `Purin is keeping your spot warm and cozy, ${name}~`,
+    ],
   },
   follicular: {
     label: 'Follicular Phase',
     sprite: 'assets/icons/pompom/pompom_energetic.png',
     spriteClass: 'mascot-follicular',
+    notes: [
+      (name) => `Fresh custard energy! Ready for a bright day, ${name}?`,
+      (name) => `Purin feels a pep in his step today—you've got this, ${name}!`,
+      (name) => `Steady, sunny momentum ahead for you, ${name}~`,
+    ],
   },
   fertile: {
     label: 'Fertile Window',
     sprite: 'assets/icons/pompom/pompom_love.png',
     spriteClass: 'mascot-fertile',
+    notes: [
+      (name) => `Peak glow days! Purin is cheering you on, ${name}~`,
+      (name) => `Warm & connected energy is high today, ${name}!`,
+      (name) => `Stay hydrated and shine bright, ${name}~`,
+    ],
   },
   ovulation: {
     label: 'Ovulation Phase',
     sprite: 'assets/icons/pompom/pompom_love.png',
     spriteClass: 'mascot-ovulation',
+    notes: [
+      (name) => `Ovulation highlight day! You're glowing, ${name}~`,
+      (name) => `Peak fertility window—Purin sends extra hugs, ${name}!`,
+      (name) => `Highest energy & sparkle of the cycle, ${name}~`,
+    ],
   },
   luteal: {
     label: 'Luteal Phase',
     sprite: 'assets/icons/pompom/pompom_eating.png',
     spriteClass: 'mascot-luteal',
+    notes: [
+      (name) => `Pudding & snack break time! Pace yourself gently, ${name}~`,
+      (name) => `Cozy wind-down days ahead—Purin saved you a treat, ${name}!`,
+      (name) => `Extra rest feels extra good right now, ${name}~`,
+    ],
   },
   late: {
     label: 'Period Late',
     sprite: 'assets/icons/pompom/pompom_eating.png',
     spriteClass: 'mascot-luteal',
+    notes: [
+      (name) => `Cycles shift naturally—Purin is right here with you, ${name}~`,
+      (name) => `Rest & deep breaths, ${name}. Log whenever flow begins!`,
+      (name) => `Sleep and stress can nudge timing—no worries, ${name}~`,
+    ],
   },
   unknown: {
     label: 'Ready to Track',
     sprite: 'assets/icons/pompom/pompom_energetic.png',
     spriteClass: 'mascot-follicular',
+    notes: [
+      (name) => `Welcome to Purin's cozy vault, ${name}! Log a period to start~`,
+      (name) => `Everything stays private & encrypted on your device, ${name}!`,
+      (name) => `Tap Purin anytime for a cozy check-in, ${name}~`,
+    ],
   },
+});
+
+const QUICK_CHIP_REACTIONS = Object.freeze({
+  cramps: (name) => `Oh no, cramps! Purin brought a warm heating pad for you, ${name}~`,
+  sweet_cravings: (name) => `Sweet cravings? Let's share a caramel custard pudding, ${name}~`,
+  sleepy: (name) => `Sleepy vibes today! Curl up for a cozy nap with Purin, ${name}~`,
+  happy: (name) => `Yay! Seeing you happy makes Purin's ears wiggle, ${name}~`,
 });
 
 const FLOW_LABELS = Object.freeze({
@@ -104,7 +148,8 @@ const SYMPTOM_LABELS = Object.freeze({
   cramps: 'Cramps',
   bloating: 'Bloating',
   headache: 'Headache',
-  fatigue: 'Fatigue',
+  fatigue: 'Sleepy',
+  sweet_cravings: 'Sweet Cravings',
   tender_breasts: 'Tender Breasts',
   acne: 'Acne',
   backache: 'Backache',
@@ -151,14 +196,28 @@ const dom = {
   // Main Shell & Dock
   appMain: document.getElementById('app-main'),
   lockButtons: Array.from(document.querySelectorAll('#btn-lock-vault, [data-action="lock-vault"]')),
+  dockPill: document.getElementById('dock-pill'),
+  dockIndicator: document.getElementById('dock-indicator'),
   dockTabs: Array.from(document.querySelectorAll('.dock-tab')),
   views: Array.from(document.querySelectorAll('.app-view')),
   btnQuickLog: document.getElementById('btn-quick-log'),
 
-  // Today Dashboard
+  // Home (Cycle) Dashboard
   greetingTitle: document.getElementById('greeting-title'),
   greetingDate: document.getElementById('greeting-date'),
   weekStrip: document.getElementById('week-strip'),
+  bentoRow: document.getElementById('bento-row'),
+  bentoOvulationVal: document.getElementById('bento-ovulation-val'),
+  bentoOvulationSub: document.getElementById('bento-ovulation-sub'),
+  bentoNextLabel: document.getElementById('bento-next-label'),
+  bentoNextPeriodVal: document.getElementById('bento-next-period-val'),
+  bentoNextPeriodSub: document.getElementById('bento-next-period-sub'),
+  cardConception: document.getElementById('card-conception'),
+  conceptionPill: document.getElementById('conception-pill'),
+  conceptionLabel: document.getElementById('conception-label'),
+  conceptionSub: document.getElementById('conception-sub'),
+  purinSpeechBubble: document.getElementById('purin-speech-bubble'),
+  purinSpeechText: document.getElementById('purin-speech-text'),
   ringArcPeriodExpected: document.getElementById('ring-arc-period-expected'),
   ringArcPeriod: document.getElementById('ring-arc-period'),
   ringArcFertile: document.getElementById('ring-arc-fertile'),
@@ -166,26 +225,19 @@ const dom = {
   ringMarker: document.getElementById('ring-marker'),
   cycleDayLabel: document.getElementById('cycle-day-label'),
   cyclePhaseLabel: document.getElementById('cycle-phase-label'),
+  btnMascotTap: document.getElementById('btn-mascot-tap'),
   cycleMascotImg: document.getElementById('cycle-mascot-img'),
   btnLogPeriod: document.getElementById('btn-log-period'),
   btnLogPeriodLabel: document.getElementById('btn-log-period-label'),
-  cardConception: document.getElementById('card-conception'),
-  conceptionPill: document.getElementById('conception-pill'),
-  conceptionLabel: document.getElementById('conception-label'),
-  forecastEyebrow: document.getElementById('forecast-eyebrow'),
-  forecastDate: document.getElementById('forecast-date'),
-  forecastWindow: document.getElementById('forecast-window'),
+  checkinStatus: document.getElementById('checkin-status'),
+  btnCheckinEdit: document.getElementById('btn-checkin-edit'),
+  checkinQuickChips: document.getElementById('checkin-quick-chips'),
 
-  // Calendar
-  calMonthLabel: document.getElementById('cal-month-label'),
-  calendarGrid: document.getElementById('calendar-grid'),
-  btnCalPrev: document.getElementById('btn-cal-prev'),
-  btnCalNext: document.getElementById('btn-cal-next'),
+  // Continuous Calendar
+  calActiveMonth: document.getElementById('cal-active-month'),
+  calScrollFeed: document.getElementById('cal-scroll-feed'),
+  calMonthsList: document.getElementById('cal-months-list'),
   btnCalToday: document.getElementById('btn-cal-today'),
-  calSummaryDate: document.getElementById('cal-summary-date'),
-  calSummaryPhase: document.getElementById('cal-summary-phase'),
-  calSummaryDetails: document.getElementById('cal-summary-details'),
-  btnCalEditLog: document.getElementById('btn-cal-edit-log'),
 
   // Insights
   metricAvgCycle: document.getElementById('metric-avg-cycle'),
@@ -196,6 +248,15 @@ const dom = {
   metricLuteal: document.getElementById('metric-luteal'),
   insightsCyclesList: document.getElementById('insights-cycles-list'),
   insightsSymptomsList: document.getElementById('insights-symptoms-list'),
+  rhythmTotalDays: document.getElementById('rhythm-total-days'),
+  rhythmSegMenstrual: document.getElementById('rhythm-seg-menstrual'),
+  rhythmSegFollicular: document.getElementById('rhythm-seg-follicular'),
+  rhythmSegOvulation: document.getElementById('rhythm-seg-ovulation'),
+  rhythmSegLuteal: document.getElementById('rhythm-seg-luteal'),
+  rhythmDaysMenstrual: document.getElementById('rhythm-days-menstrual'),
+  rhythmDaysFollicular: document.getElementById('rhythm-days-follicular'),
+  rhythmDaysOvulation: document.getElementById('rhythm-days-ovulation'),
+  rhythmDaysLuteal: document.getElementById('rhythm-days-luteal'),
 
   // Settings
   settingName: document.getElementById('setting-name'),
@@ -236,8 +297,6 @@ const dom = {
 /* ==========================================================================
    Runtime UI State
    ========================================================================== */
-const todayInitial = parseIsoDate(getTodayIsoDate());
-
 const uiState = {
   splashDismissed: false,
   splashTimers: [],
@@ -254,9 +313,12 @@ const uiState = {
   activeTab: 'today',
   selectedDate: getTodayIsoDate(),
   calendarSelectedDate: getTodayIsoDate(),
-  calendarYear: todayInitial.getFullYear(),
-  calendarMonth: todayInitial.getMonth(), // 0-indexed
+  calendarObserver: null,
+  calendarScrollRaf: null,
   latestForecast: null,
+  phaseNoteIndex: 0,
+  lastRenderedPhase: null,
+  speechOverrideKey: null,
 
   // Drawer & modal state
   drawerOpen: false,
@@ -269,7 +331,7 @@ const uiState = {
 };
 
 /* ==========================================================================
-   Date Formatting Helpers
+   Date, Cycle & Jelly Physics Helpers
    ========================================================================== */
 function getOrdinalSuffix(day) {
   if (day >= 11 && day <= 13) return 'th';
@@ -295,6 +357,28 @@ function formatShortDate(isoDate) {
 function formatShortDateWithYear(isoDate) {
   const d = parseIsoDate(isoDate);
   return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+/**
+ * Computes the completed cycle length for cycles[index], or null if ongoing.
+ */
+function getCycleLength(cycles, index) {
+  if (!Array.isArray(cycles) || index < 0 || index >= cycles.length - 1) {
+    return null;
+  }
+  return diffDays(cycles[index].startDate, cycles[index + 1].startDate);
+}
+
+function triggerJellyPop(el, className = 'is-jelly') {
+  if (!el) return;
+  el.classList.remove(className);
+  void el.offsetWidth;
+  el.classList.add(className);
+}
+
+function getDisplayName(vaultState) {
+  const raw = (vaultState?.settings?.userName || '').trim();
+  return raw || 'Friend';
 }
 
 function showToast(message) {
@@ -323,13 +407,13 @@ function dismissSplash(immediate = false) {
   dom.splash.classList.add('is-fading');
   const removeTimer = setTimeout(() => {
     dom.splash.hidden = true;
-  }, 300);
+  }, 340);
   uiState.splashTimers.push(removeTimer);
 }
 
 function initSplash() {
-  const fadeTimer = setTimeout(() => dismissSplash(false), SPLASH_FADE_MS);
-  uiState.splashTimers.push(fadeTimer);
+  const finishTimer = setTimeout(() => dismissSplash(true), SPLASH_FADE_MS);
+  uiState.splashTimers.push(finishTimer);
 
   dom.splash.addEventListener('click', () => dismissSplash(true));
   dom.splash.addEventListener('keydown', (e) => {
@@ -341,11 +425,11 @@ function initSplash() {
 }
 
 /* ==========================================================================
-   2. Vault Gate, First-Time Onboarding & Auto-Lock
+   2. Vault Gate, First-Time Onboarding & Custard Pudding PIN Dots
    ========================================================================== */
 function configurePinGateUI() {
   uiState.pinBuffer = '';
-  renderPinDots();
+  renderPinDots(-1);
   dom.pinError.textContent = '';
 
   if (uiState.vaultExists) {
@@ -371,10 +455,16 @@ function setPinBusy(isBusy, message = '') {
   }
 }
 
-function renderPinDots() {
+function renderPinDots(popIndex = -1) {
   const dots = dom.pinDots.querySelectorAll('.pin-dot');
   dots.forEach((dot, idx) => {
-    dot.classList.toggle('is-filled', idx < uiState.pinBuffer.length);
+    const filled = idx < uiState.pinBuffer.length;
+    dot.classList.toggle('is-filled', filled);
+    if (!filled) {
+      dot.classList.remove('is-jelly');
+    } else if (idx === popIndex) {
+      triggerJellyPop(dot);
+    }
   });
   dom.pinDots.setAttribute(
     'aria-label',
@@ -388,7 +478,7 @@ function triggerPinError(message) {
   void dom.pinDots.offsetWidth;
   dom.pinDots.classList.add('is-shaking');
   uiState.pinBuffer = '';
-  renderPinDots();
+  renderPinDots(-1);
 }
 
 function handlePinKey(key) {
@@ -397,19 +487,20 @@ function handlePinKey(key) {
 
   if (key === 'clear') {
     uiState.pinBuffer = '';
-    renderPinDots();
+    renderPinDots(-1);
     return;
   }
 
   if (key === 'backspace') {
     uiState.pinBuffer = uiState.pinBuffer.slice(0, -1);
-    renderPinDots();
+    renderPinDots(-1);
     return;
   }
 
   if (/^\d$/.test(key) && uiState.pinBuffer.length < PIN_LENGTH) {
+    const filledIdx = uiState.pinBuffer.length;
     uiState.pinBuffer += key;
-    renderPinDots();
+    renderPinDots(filledIdx);
 
     if (uiState.pinBuffer.length === PIN_LENGTH) {
       const entered = uiState.pinBuffer;
@@ -424,7 +515,7 @@ async function handlePinSubmit(enteredPin) {
     try {
       await unlockVault(enteredPin);
       uiState.pinBuffer = '';
-      renderPinDots();
+      renderPinDots(-1);
       setPinBusy(false);
       enterMainApp();
     } catch {
@@ -469,7 +560,7 @@ async function handlePinSubmit(enteredPin) {
     uiState.firstPinAttempt = '';
     uiState.stagedFloJson = null;
     uiState.pinBuffer = '';
-    renderPinDots();
+    renderPinDots(-1);
     setPinBusy(false);
     enterMainApp();
     showToast('Encrypted vault created');
@@ -486,14 +577,14 @@ function enterMainApp() {
   const today = getTodayIsoDate();
   uiState.selectedDate = today;
   uiState.calendarSelectedDate = today;
-  const parsed = parseIsoDate(today);
-  uiState.calendarYear = parsed.getFullYear();
-  uiState.calendarMonth = parsed.getMonth();
+  uiState.phaseNoteIndex = 0;
+  uiState.speechOverrideKey = null;
 
   dom.pinGate.hidden = true;
   dom.appMain.hidden = false;
   switchTab('today');
   renderApp();
+  requestAnimationFrame(() => updateDockIndicator(false));
   resetInactivityTimer();
 }
 
@@ -612,7 +703,8 @@ function renderApp() {
 
 function getInsightsPeriodStats(vaultState, forecast) {
   const defaultPeriodLen = Number(vaultState.settings?.defaultPeriodLength) || 5;
-  const completedCycles = (forecast.cycles || []).filter((c) => c.cycleLength != null);
+  const cycles = forecast.cycles || [];
+  const completedCycles = cycles.filter((_, idx) => getCycleLength(cycles, idx) != null);
 
   if (completedCycles.length === 0) {
     return {
@@ -634,49 +726,135 @@ function getInsightsPeriodStats(vaultState, forecast) {
 }
 
 /* ==========================================================================
-   4. View A: Today Dashboard
+   4. View A: Home (Cycle) Dashboard — 3-Zone Pompompurin World Layout
    ========================================================================== */
 function renderTodayView(vaultState, forecast, todayStr) {
-  const userName = (vaultState.settings?.userName || '').trim();
-  dom.greetingTitle.textContent = `Hello, ${userName || 'Friend'}`;
+  const name = getDisplayName(vaultState);
+  dom.greetingTitle.textContent = `Hello, ${name}!`;
   dom.greetingDate.textContent = formatLongDate(uiState.selectedDate);
 
   renderWeekStrip(forecast, todayStr);
-  renderCycleRing(vaultState, forecast);
+  renderBentoMetrics(vaultState, forecast, todayStr);
+  renderCycleRing(vaultState, forecast, todayStr);
+  renderPurinSpeech(vaultState, forecast, todayStr);
+  renderDailyCheckIn(vaultState, todayStr);
 
   // Primary Action CTA ("Log Period +") reflects today's logged/imported period status
   const isPeriodToday = Boolean(forecast.calendarMap?.[todayStr]?.isLoggedPeriod);
   dom.btnLogPeriod.classList.toggle('is-active', isPeriodToday);
   dom.btnLogPeriodLabel.textContent = isPeriodToday ? 'Period Logged ✓' : 'Log Period +';
+}
 
-  // Card 1: Conception Chance
-  const showConception = vaultState.settings?.showConceptionChance !== false;
-  dom.cardConception.hidden = !showConception;
-  const isHighConception =
-    forecast.currentPhase === 'fertile' || forecast.currentPhase === 'ovulation';
-  dom.conceptionPill.classList.toggle('status-pill--high', isHighConception);
-  dom.conceptionPill.classList.toggle('status-pill--low', !isHighConception);
-  dom.conceptionLabel.textContent = isHighConception ? 'High' : 'Low';
-
-  // Card 2: Next Period Forecast
-  if (!forecast.hasData) {
-    dom.forecastEyebrow.textContent = 'Next expected period';
-    dom.forecastDate.textContent = 'No history yet';
-    dom.forecastWindow.textContent = 'Tap "Log Period +" or import Flo data to begin';
-  } else if (forecast.isLate) {
-    dom.forecastEyebrow.textContent = 'Cycle Status';
-    dom.forecastDate.textContent = `Period is ${forecast.daysLate} ${forecast.daysLate === 1 ? 'day' : 'days'} late`;
-    dom.forecastWindow.textContent = `Originally expected ${formatShortDate(forecast.expectedNextPeriodStart)}`;
+function renderBentoMetrics(vaultState, forecast, todayStr) {
+  // Card 1: Ovulation (formatted date + days away)
+  if (!forecast.hasData || !forecast.predictedOvulationDate) {
+    dom.bentoOvulationVal.textContent = '—';
+    dom.bentoOvulationSub.textContent = 'Log to start';
   } else {
-    dom.forecastEyebrow.textContent = 'Next expected period';
-    dom.forecastDate.textContent = formatShortDateWithYear(forecast.predictedNextPeriodStart);
-    if (forecast.periodArrivalWindow) {
-      dom.forecastWindow.textContent =
-        `Window: ${formatShortDate(forecast.periodArrivalWindow.earliest)} – ${formatShortDate(forecast.periodArrivalWindow.latest)}`;
+    dom.bentoOvulationVal.textContent = formatShortDate(forecast.predictedOvulationDate);
+    const delta = diffDays(todayStr, forecast.predictedOvulationDate);
+    if (delta === 0) {
+      dom.bentoOvulationSub.textContent = 'Today';
+    } else if (delta > 0) {
+      dom.bentoOvulationSub.textContent = `in ${delta}d`;
     } else {
-      dom.forecastWindow.textContent = '';
+      dom.bentoOvulationSub.textContent = `${Math.abs(delta)}d ago`;
     }
   }
+
+  // Card 2: Next Period (formatted date + countdown)
+  if (!forecast.hasData) {
+    dom.bentoNextLabel.textContent = 'Next Period';
+    dom.bentoNextPeriodVal.textContent = '—';
+    dom.bentoNextPeriodSub.textContent = 'Log to start';
+  } else if (forecast.isLate) {
+    dom.bentoNextLabel.textContent = 'Period Late';
+    dom.bentoNextPeriodVal.textContent = `${forecast.daysLate}d late`;
+    dom.bentoNextPeriodSub.textContent = `Exp ${formatShortDate(forecast.expectedNextPeriodStart)}`;
+  } else {
+    dom.bentoNextLabel.textContent = 'Next Period';
+    dom.bentoNextPeriodVal.textContent = formatShortDate(forecast.predictedNextPeriodStart);
+    const daysLeft = forecast.daysUntilNextPeriod;
+    dom.bentoNextPeriodSub.textContent =
+      daysLeft <= 0 ? 'Expected today' : `in ${daysLeft}d`;
+  }
+
+  // Card 3: Fertility (warm companion copy)
+  const showConception = vaultState.settings?.showConceptionChance !== false;
+  dom.cardConception.hidden = !showConception;
+  dom.bentoRow.classList.toggle('bento-row--two', !showConception);
+
+  const isHighConception =
+    forecast.currentPhase === 'fertile' || forecast.currentPhase === 'ovulation';
+  dom.conceptionPill.classList.toggle('is-high', isHighConception);
+  dom.conceptionLabel.textContent = isHighConception ? 'High' : 'Low';
+  dom.conceptionSub.textContent = isHighConception ? 'Peak Days' : 'Cozy Days';
+}
+
+function renderPurinSpeech(vaultState, forecast, todayStr) {
+  const name = getDisplayName(vaultState);
+  const phase = forecast.currentPhase || 'unknown';
+  const meta = PHASE_META[phase] || PHASE_META.unknown;
+  const todayLog = vaultState?.dailyLogs?.[todayStr] || {};
+  const syms = Array.isArray(todayLog.symptoms) ? todayLog.symptoms : [];
+
+  if (uiState.lastRenderedPhase !== phase) {
+    uiState.lastRenderedPhase = phase;
+    uiState.phaseNoteIndex = 0;
+  }
+
+  let message = '';
+  if (uiState.speechOverrideKey && QUICK_CHIP_REACTIONS[uiState.speechOverrideKey]) {
+    message = QUICK_CHIP_REACTIONS[uiState.speechOverrideKey](name);
+  } else if (uiState.phaseNoteIndex === 0 && syms.includes('cramps')) {
+    message = QUICK_CHIP_REACTIONS.cramps(name);
+  } else if (uiState.phaseNoteIndex === 0 && syms.includes('sweet_cravings')) {
+    message = QUICK_CHIP_REACTIONS.sweet_cravings(name);
+  } else if (uiState.phaseNoteIndex === 0 && syms.includes('fatigue')) {
+    message = QUICK_CHIP_REACTIONS.sleepy(name);
+  } else if (uiState.phaseNoteIndex === 0 && todayLog.mood === 'happy') {
+    message = QUICK_CHIP_REACTIONS.happy(name);
+  } else {
+    const notes = meta.notes || [];
+    const fn = notes[uiState.phaseNoteIndex % notes.length];
+    message = typeof fn === 'function' ? fn(name) : '';
+  }
+
+  dom.purinSpeechText.textContent = message;
+}
+
+function renderDailyCheckIn(vaultState, todayStr) {
+  const log = vaultState?.dailyLogs?.[todayStr] || {};
+  const syms = new Set(Array.isArray(log.symptoms) ? log.symptoms : []);
+  const tags = [];
+
+  if (log.flow && log.flow !== 'none') {
+    tags.push(FLOW_LABELS[log.flow] || log.flow);
+  }
+  if (log.mood && MOOD_LABELS[log.mood]) {
+    tags.push(MOOD_LABELS[log.mood]);
+  }
+  syms.forEach((s) => {
+    tags.push(SYMPTOM_LABELS[s] || s);
+  });
+
+  dom.checkinStatus.textContent = tags.length > 0
+    ? `Today: ${tags.join(' · ')}`
+    : 'Nothing logged yet today';
+
+  // Sync the 4 quick 1-tap toggle chips
+  const quickStates = {
+    sleepy: syms.has('fatigue'),
+    sweet_cravings: syms.has('sweet_cravings'),
+    cramps: syms.has('cramps'),
+    happy: log.mood === 'happy',
+  };
+
+  dom.checkinQuickChips.querySelectorAll('[data-quick]').forEach((chip) => {
+    const active = Boolean(quickStates[chip.dataset.quick]);
+    chip.classList.toggle('is-selected', active);
+    chip.setAttribute('aria-pressed', String(active));
+  });
 }
 
 function renderWeekStrip(forecast, todayStr) {
@@ -722,16 +900,16 @@ function renderCycleRing(vaultState, forecast) {
   const phase = forecast.currentPhase || 'unknown';
   const meta = PHASE_META[phase] || PHASE_META.unknown;
 
-  // Update mascot sprite & phase-specific framing class
+  // Update mascot sprite & framing class
   dom.cycleMascotImg.src = meta.sprite;
   dom.cycleMascotImg.className = `cycle-mascot-img ${meta.spriteClass}`;
   dom.cyclePhaseLabel.textContent = meta.label;
 
   if (!forecast.hasData || !forecast.currentCycleDay) {
     dom.cycleDayLabel.textContent = 'Day —';
-    dom.ringArcPeriodExpected.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE}`;
-    dom.ringArcPeriod.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE}`;
-    dom.ringArcFertile.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE}`;
+    dom.ringArcPeriodExpected.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE.toFixed(2)}`;
+    dom.ringArcPeriod.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE.toFixed(2)}`;
+    dom.ringArcFertile.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE.toFixed(2)}`;
     dom.ringOvulationDot.style.opacity = '0';
     dom.ringMarker.style.opacity = '0';
     return;
@@ -779,7 +957,7 @@ function renderCycleRing(vaultState, forecast) {
     dom.ringArcFertile.style.strokeDasharray = `${fertileArcLen.toFixed(2)} ${RING_CIRCUMFERENCE.toFixed(2)}`;
     dom.ringArcFertile.style.strokeDashoffset = fertileOffset.toFixed(2);
   } else {
-    dom.ringArcFertile.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE}`;
+    dom.ringArcFertile.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE.toFixed(2)}`;
   }
 
   // Distinct dark-matcha ovulation marker dot (#3F7A52) on exact predictedOvulationDate
@@ -787,8 +965,8 @@ function renderCycleRing(vaultState, forecast) {
     const ovOffsetDays = diffDays(forecast.activeCycle.startDate, forecast.predictedOvulationDate);
     if (ovOffsetDays >= 0 && ovOffsetDays < cycleLen) {
       const ovAngle = (ovOffsetDays / cycleLen) * 2 * Math.PI;
-      const ovCx = 120 + RING_RADIUS * Math.cos(ovAngle);
-      const ovCy = 120 + RING_RADIUS * Math.sin(ovAngle);
+      const ovCx = RING_CENTER + RING_RADIUS * Math.cos(ovAngle);
+      const ovCy = RING_CENTER + RING_RADIUS * Math.sin(ovAngle);
       dom.ringOvulationDot.setAttribute('cx', ovCx.toFixed(2));
       dom.ringOvulationDot.setAttribute('cy', ovCy.toFixed(2));
       dom.ringOvulationDot.style.opacity = '1';
@@ -799,16 +977,43 @@ function renderCycleRing(vaultState, forecast) {
     dom.ringOvulationDot.style.opacity = '0';
   }
 
-  // Current cycle day marker dot (SVG is rotated -90deg so angle 0 = 12 o'clock)
+  // Pompompurin Beret progress marker positioned at current day angle
+  // SVG is rotated -90deg so angle 0 = 12 o'clock; rotate(90) keeps the beret upright
   const progress = Math.min(1, Math.max(0, (forecast.currentCycleDay - 1) / cycleLen));
   const angle = progress * 2 * Math.PI;
-  const cx = 120 + RING_RADIUS * Math.cos(angle);
-  const cy = 120 + RING_RADIUS * Math.sin(angle);
-  dom.ringMarker.setAttribute('cx', cx.toFixed(2));
-  dom.ringMarker.setAttribute('cy', cy.toFixed(2));
+  const cx = RING_CENTER + RING_RADIUS * Math.cos(angle);
+  const cy = RING_CENTER + RING_RADIUS * Math.sin(angle);
+  dom.ringMarker.setAttribute(
+    'transform',
+    `translate(${cx.toFixed(2)}, ${cy.toFixed(2)}) rotate(90)`
+  );
 }
 
 function initTodayActions() {
+  // Interactive Pompompurin jellyPop + comforting speech bubble cycler
+  dom.btnMascotTap.addEventListener('click', () => {
+    const phase = uiState.latestForecast?.currentPhase || 'unknown';
+    const meta = PHASE_META[phase] || PHASE_META.unknown;
+    const notes = meta.notes || [];
+
+    triggerJellyPop(dom.cycleMascotImg);
+    triggerJellyPop(dom.purinSpeechBubble);
+
+    uiState.speechOverrideKey = null;
+    if (notes.length > 0 && isVaultUnlocked()) {
+      uiState.phaseNoteIndex = (uiState.phaseNoteIndex + 1) % notes.length;
+      const name = getDisplayName(getVaultState());
+      const fn = notes[uiState.phaseNoteIndex];
+      dom.purinSpeechText.textContent = typeof fn === 'function' ? fn(name) : '';
+    }
+  });
+
+  dom.cycleMascotImg.addEventListener('animationend', (e) => {
+    if (e.animationName === 'jellyPop') {
+      dom.cycleMascotImg.classList.remove('is-jelly');
+    }
+  });
+
   dom.weekStrip.addEventListener('click', (e) => {
     const pill = e.target.closest('[data-date]');
     if (!pill) return;
@@ -826,7 +1031,14 @@ function initTodayActions() {
     const wasPeriodToday = Boolean(
       uiState.latestForecast?.calendarMap?.[todayStr]?.isLoggedPeriod
     );
+
+    // Optimistic UI update + jellyPop
+    const nextLoggedOptimistic = !wasPeriodToday;
+    dom.btnLogPeriod.classList.toggle('is-active', nextLoggedOptimistic);
+    dom.btnLogPeriodLabel.textContent = nextLoggedOptimistic ? 'Period Logged ✓' : 'Log Period +';
+    triggerJellyPop(dom.btnLogPeriod);
     dom.btnLogPeriod.disabled = true;
+
     try {
       let nowLogged = false;
       await commitVaultState((draft) => {
@@ -850,229 +1062,405 @@ function initTodayActions() {
           removedFlowDates,
         });
       });
+      uiState.speechOverrideKey = null;
       renderApp();
       showToast(nowLogged ? 'Period logged for today' : 'Period removed for today');
     } catch (err) {
+      dom.btnLogPeriod.classList.toggle('is-active', wasPeriodToday);
+      dom.btnLogPeriodLabel.textContent = wasPeriodToday ? 'Period Logged ✓' : 'Log Period +';
       showToast(err.message || 'Could not update period');
     } finally {
       dom.btnLogPeriod.disabled = false;
     }
   });
+
+  // Purin's Daily Check-In: Edit button & 4 Quick 1-Tap Chips
+  dom.btnCheckinEdit.addEventListener('click', () => {
+    openLogDrawer(getTodayIsoDate());
+  });
+
+  dom.checkinQuickChips.addEventListener('click', async (e) => {
+    const chip = e.target.closest('[data-quick]');
+    if (!chip || !isVaultUnlocked() || chip.disabled) return;
+
+    const key = chip.dataset.quick;
+    const todayStr = getTodayIsoDate();
+    const wasSelected = chip.classList.contains('is-selected');
+    const nextSelected = !wasSelected;
+
+    // Optimistic UI toggle + jellyPop
+    chip.classList.toggle('is-selected', nextSelected);
+    chip.setAttribute('aria-pressed', String(nextSelected));
+    triggerJellyPop(chip);
+    chip.disabled = true;
+
+    try {
+      await commitVaultState((draft) => {
+        const existing = draft.dailyLogs[todayStr] ? { ...draft.dailyLogs[todayStr] } : {};
+        if (!existing.flow) existing.flow = 'none';
+
+        if (key === 'happy') {
+          if (nextSelected) {
+            existing.mood = 'happy';
+          } else if (existing.mood === 'happy') {
+            delete existing.mood;
+          }
+        } else {
+          const symKey = key === 'sleepy' ? 'fatigue' : key;
+          const syms = new Set(Array.isArray(existing.symptoms) ? existing.symptoms : []);
+          if (nextSelected) {
+            syms.add(symKey);
+          } else {
+            syms.delete(symKey);
+          }
+          if (syms.size > 0) {
+            existing.symptoms = Array.from(syms);
+          } else {
+            delete existing.symptoms;
+          }
+        }
+
+        if (isLogEmpty(existing)) {
+          delete draft.dailyLogs[todayStr];
+        } else {
+          draft.dailyLogs[todayStr] = existing;
+        }
+      });
+
+      uiState.speechOverrideKey = nextSelected ? key : null;
+      renderApp();
+      triggerJellyPop(dom.purinSpeechBubble);
+      if (nextSelected) {
+        triggerJellyPop(dom.cycleMascotImg);
+      }
+    } catch (err) {
+      chip.classList.toggle('is-selected', wasSelected);
+      chip.setAttribute('aria-pressed', String(wasSelected));
+      showToast(err.message || 'Could not update check-in');
+    } finally {
+      chip.disabled = false;
+    }
+  });
 }
 
 /* ==========================================================================
-   5. View B: Monthly Calendar
+   5. View B: Pompompurin Continuous Vertical Scrolling Calendar
    ========================================================================== */
-function renderCalendarView(vaultState, forecast, todayStr) {
-  const year = uiState.calendarYear;
-  const month = uiState.calendarMonth;
-  dom.calMonthLabel.textContent = `${MONTH_NAMES[month]} ${year}`;
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-  const firstOfMonth = new Date(year, month, 1, 12, 0, 0, 0);
-  const firstWeekday = firstOfMonth.getDay(); // 0 = Sun
-  const daysInMonth = new Date(year, month + 1, 0, 12, 0, 0, 0).getDate();
-  const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+function createTodayBeretSvg() {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 22 16');
+  svg.setAttribute('class', 'cal-today-beret');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML =
+    '<ellipse cx="11" cy="10.5" rx="10" ry="5" fill="#FFFDF5"/>' +
+    '<ellipse cx="11" cy="10.5" rx="8.6" ry="3.8" fill="#4A3222"/>' +
+    '<path d="M3.6 9.8C4.8 5.6 7.8 4 11 4C14.2 4 17.2 5.6 18.4 9.8C15.5 11.4 6.5 11.4 3.6 9.8Z" fill="#5D3E2B"/>' +
+    '<rect x="9.8" y="1.4" width="2.4" height="3.2" rx="1.2" fill="#4A3222"/>';
+  return svg;
+}
 
-  const firstIso = formatIsoDate(firstOfMonth);
-  const gridStartIso = addDays(firstIso, -firstWeekday);
-  const fragment = document.createDocumentFragment();
+function createOvulationSparkleSvg() {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 12 12');
+  svg.setAttribute('class', 'cal-marker-sparkle');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML =
+    '<path d="M6 0.8L7.3 4.7L11.2 6L7.3 7.3L6 11.2L4.7 7.3L0.8 6L4.7 4.7Z" fill="#F7D358"/>';
+  return svg;
+}
 
-  for (let i = 0; i < totalCells; i++) {
-    const iso = addDays(gridStartIso, i);
-    const d = parseIsoDate(iso);
-    const inCurrentMonth = d.getMonth() === month;
-    const entry = forecast.calendarMap[iso];
+function createPuddingCupSvg() {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 14 11');
+  svg.setAttribute('class', 'cal-marker-pudding');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML =
+    '<path d="M2.2 9.5L3.4 3.6C3.7 2.2 5.1 1.5 7 1.5C8.9 1.5 10.3 2.2 10.6 3.6L11.8 9.5H2.2Z" fill="#F7D358" stroke="#4A3222" stroke-width="1.3" stroke-linejoin="round"/>' +
+    '<path d="M3.4 3.8C3.8 2.2 5.1 1.5 7 1.5C8.9 1.5 10.2 2.2 10.6 3.8C9.6 4.4 8.4 4.1 7 4.4C5.6 4.1 4.4 4.4 3.4 3.8Z" fill="#8C5A32"/>';
+  return svg;
+}
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'cal-cell';
-    btn.dataset.date = iso;
-    btn.setAttribute('aria-label', formatLongDate(iso));
-    btn.setAttribute('aria-pressed', String(iso === uiState.calendarSelectedDate));
+/**
+ * Computes a concise period span badge for a given month (e.g., "Dec 20–24").
+ */
+function getMonthPeriodBadge(year, month, daysInMonth, calendarMap) {
+  const loggedDays = [];
+  const predictedDays = [];
 
-    if (!inCurrentMonth) btn.classList.add('cal-cell--other-month');
-    if (iso === todayStr) btn.classList.add('cal-cell--today');
-    if (iso === uiState.calendarSelectedDate) btn.classList.add('cal-cell--selected');
-
-    const isOvulation = Boolean(entry && (entry.isConfirmedOvulation || entry.isPredictedOvulation));
+  for (let day = 1; day <= daysInMonth; day++) {
+    const iso = formatIsoDate(new Date(year, month, day, 12, 0, 0, 0));
+    const entry = calendarMap[iso];
     if (entry?.isLoggedPeriod) {
-      btn.classList.add('cal-cell--logged_period');
-    } else if (isOvulation) {
-      btn.classList.add('cal-cell--ovulation');
+      loggedDays.push(day);
     } else if (entry?.isPredictedPeriod) {
-      btn.classList.add('cal-cell--predicted_period');
-    } else if (entry?.isFertileWindow) {
-      btn.classList.add('cal-cell--fertile');
+      predictedDays.push(day);
     }
-
-    const num = document.createElement('span');
-    num.textContent = String(d.getDate());
-    btn.appendChild(num);
-
-    if (isOvulation) {
-      const star = document.createElement('span');
-      star.className = 'cal-cell-star';
-      star.textContent = '★';
-      star.setAttribute('aria-hidden', 'true');
-      btn.appendChild(star);
-    }
-
-    if (entry?.hasLog) {
-      const dot = document.createElement('span');
-      dot.className = 'cal-cell-dot';
-      dot.setAttribute('aria-hidden', 'true');
-      btn.appendChild(dot);
-    }
-
-    fragment.appendChild(btn);
   }
 
-  dom.calendarGrid.replaceChildren(fragment);
-  renderCalendarDaySummary(vaultState, forecast);
+  const isLogged = loggedDays.length > 0;
+  const days = isLogged ? loggedDays : predictedDays;
+  if (days.length === 0) return null;
+
+  // Group contiguous day numbers into ranges
+  const ranges = [];
+  let start = days[0];
+  let prev = days[0];
+  for (let i = 1; i < days.length; i++) {
+    if (days[i] === prev + 1) {
+      prev = days[i];
+    } else {
+      ranges.push(start === prev ? `${start}` : `${start}–${prev}`);
+      start = days[i];
+      prev = days[i];
+    }
+  }
+  ranges.push(start === prev ? `${start}` : `${start}–${prev}`);
+
+  return {
+    text: `${MONTH_SHORT[month]} ${ranges.join(', ')}`,
+    isLogged,
+  };
 }
 
-function getDatePhaseAndCycleDay(isoDate, forecast) {
-  const entry = forecast.calendarMap?.[isoDate];
-  let cycleDay = entry?.cycleDay || null;
-
-  if (!cycleDay && Array.isArray(forecast.cycles) && forecast.cycles.length > 0) {
-    // Find latest cycle starting on or before isoDate
-    for (let i = forecast.cycles.length - 1; i >= 0; i--) {
-      const c = forecast.cycles[i];
-      if (isoDate >= c.startDate) {
-        const diff = diffDays(c.startDate, isoDate) + 1;
-        if (c.cycleLength == null || diff <= c.cycleLength) {
-          cycleDay = diff;
-        }
-        break;
-      }
-    }
-  }
-
-  let phaseLabel = 'No phase data';
-  if (entry?.isLoggedPeriod) {
-    phaseLabel = 'Logged Period';
-  } else if (entry?.isConfirmedOvulation) {
-    phaseLabel = 'Confirmed Ovulation';
-  } else if (entry?.isPredictedOvulation) {
-    phaseLabel = 'Predicted Ovulation';
-  } else if (entry?.isPredictedPeriod) {
-    phaseLabel = 'Predicted Period';
-  } else if (entry?.isFertileWindow) {
-    phaseLabel = 'Fertile Window';
-  } else if (cycleDay) {
-    phaseLabel = forecast.predictedOvulationDate && isoDate > forecast.predictedOvulationDate
-      ? 'Luteal Phase'
-      : 'Follicular Phase';
-  }
-
-  return { cycleDay, phaseLabel };
-}
-
-function renderCalendarDaySummary(vaultState, forecast) {
-  const iso = uiState.calendarSelectedDate || getTodayIsoDate();
-  dom.calSummaryDate.textContent = formatLongDate(iso);
-
-  const { cycleDay, phaseLabel } = getDatePhaseAndCycleDay(iso, forecast);
-  dom.calSummaryPhase.textContent = cycleDay
-    ? `Cycle Day ${cycleDay} · ${phaseLabel}`
-    : phaseLabel;
-
-  const log = vaultState?.dailyLogs?.[iso];
-  const tags = [];
-  if (log?.flow && log.flow !== 'none') {
-    tags.push(FLOW_LABELS[log.flow] || log.flow);
-  }
-  if (log?.mood && MOOD_LABELS[log.mood]) {
-    tags.push(`Mood: ${MOOD_LABELS[log.mood]}`);
-  }
-  if (Array.isArray(log?.symptoms)) {
-    log.symptoms.forEach((s) => tags.push(SYMPTOM_LABELS[s] || s));
-  }
-  if (log?.lhTest) {
-    tags.push(`LH: ${log.lhTest === 'positive' ? 'Positive' : 'Negative'}`);
-  }
-  if (typeof log?.bbt === 'number') {
-    tags.push(`BBT: ${log.bbt.toFixed(2)}°C`);
-  }
+function renderCalendarView(vaultState, forecast, todayStr) {
+  const todayDate = parseIsoDate(todayStr);
+  const baseYear = todayDate.getFullYear();
+  const baseMonth = todayDate.getMonth();
+  const prevScrollTop = dom.calScrollFeed.scrollTop;
 
   const fragment = document.createDocumentFragment();
-  if (tags.length === 0 && !log?.note) {
-    const empty = document.createElement('p');
-    empty.className = 'empty-hint';
-    empty.textContent = 'No logs recorded';
-    fragment.appendChild(empty);
-  } else {
-    if (tags.length > 0) {
-      const tagWrap = document.createElement('div');
-      tagWrap.className = 'day-summary-tags';
-      tags.forEach((text) => {
-        const pill = document.createElement('span');
-        pill.className = 'day-summary-tag';
-        pill.textContent = text;
-        tagWrap.appendChild(pill);
-      });
-      fragment.appendChild(tagWrap);
+
+  for (let offset = -CALENDAR_MONTHS_PAST; offset <= CALENDAR_MONTHS_FUTURE; offset++) {
+    const monthDate = new Date(baseYear, baseMonth + offset, 1, 12, 0, 0, 0);
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
+    const monthLabel = `${MONTH_NAMES[month]} ${year}`;
+    const firstWeekday = monthDate.getDay(); // 0 = Sun
+    const daysInMonth = new Date(year, month + 1, 0, 12, 0, 0, 0).getDate();
+
+    const block = document.createElement('div');
+    block.className = 'cal-month-block';
+    block.dataset.year = String(year);
+    block.dataset.month = String(month);
+    block.dataset.label = monthLabel;
+
+    // Sanrio Ledger Month Divider Ribbon
+    const divider = document.createElement('div');
+    divider.className = 'cal-month-divider';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'cal-month-name';
+    nameSpan.textContent = monthLabel;
+
+    const dashLine = document.createElement('span');
+    dashLine.className = 'cal-month-dash';
+    dashLine.setAttribute('aria-hidden', 'true');
+
+    divider.append(nameSpan, dashLine);
+
+    const periodBadge = getMonthPeriodBadge(year, month, daysInMonth, forecast.calendarMap);
+    if (periodBadge) {
+      const badge = document.createElement('span');
+      badge.className =
+        'cal-month-period-badge' +
+        (periodBadge.isLogged ? ' cal-month-period-badge--logged' : '');
+      badge.textContent = periodBadge.text;
+      divider.appendChild(badge);
     }
-    if (log?.note) {
-      const noteEl = document.createElement('p');
-      noteEl.className = 'day-summary-note';
-      noteEl.textContent = `"${log.note}"`;
-      fragment.appendChild(noteEl);
+
+    block.appendChild(divider);
+
+    const grid = document.createElement('div');
+    grid.className = 'cal-month-grid';
+
+    // Leading weekday alignment spacers
+    for (let s = 0; s < firstWeekday; s++) {
+      const spacer = document.createElement('div');
+      spacer.className = 'cal-spacer';
+      spacer.setAttribute('aria-hidden', 'true');
+      grid.appendChild(spacer);
+    }
+
+    // Actual days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = formatIsoDate(new Date(year, month, day, 12, 0, 0, 0));
+      const entry = forecast.calendarMap[iso];
+      const isToday = iso === todayStr;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cal-cell';
+      btn.dataset.date = iso;
+      btn.setAttribute('aria-label', `${formatLongDate(iso)}, tap to log`);
+
+      const isOvulation = Boolean(entry && (entry.isConfirmedOvulation || entry.isPredictedOvulation));
+      if (entry?.isLoggedPeriod) {
+        btn.classList.add('cal-cell--logged_period');
+      } else if (isOvulation) {
+        btn.classList.add('cal-cell--ovulation');
+      } else if (entry?.isPredictedPeriod) {
+        btn.classList.add('cal-cell--predicted_period');
+      } else if (entry?.isFertileWindow) {
+        btn.classList.add('cal-cell--fertile');
+      }
+
+      if (isToday) {
+        btn.classList.add('cal-cell--today');
+        btn.appendChild(createTodayBeretSvg());
+      }
+
+      const num = document.createElement('span');
+      num.className = 'cal-cell-num';
+      num.textContent = String(day);
+      btn.appendChild(num);
+
+      if (isOvulation || entry?.hasLog) {
+        const markers = document.createElement('span');
+        markers.className = 'cal-cell-markers';
+        markers.setAttribute('aria-hidden', 'true');
+
+        if (isOvulation) {
+          markers.appendChild(createOvulationSparkleSvg());
+        }
+        if (entry?.hasLog) {
+          markers.appendChild(createPuddingCupSvg());
+        }
+        btn.appendChild(markers);
+      }
+
+      grid.appendChild(btn);
+    }
+
+    block.appendChild(grid);
+    fragment.appendChild(block);
+  }
+
+  dom.calMonthsList.replaceChildren(fragment);
+
+  if (uiState.activeTab === 'calendar' && prevScrollTop > 0) {
+    dom.calScrollFeed.scrollTop = prevScrollTop;
+  }
+
+  setupCalendarMonthObserver();
+  syncActiveMonthLabelFromScroll();
+}
+
+function setupCalendarMonthObserver() {
+  if (uiState.calendarObserver) {
+    uiState.calendarObserver.disconnect();
+    uiState.calendarObserver = null;
+  }
+
+  if (typeof IntersectionObserver === 'undefined') return;
+
+  const blocks = dom.calMonthsList.querySelectorAll('.cal-month-block');
+  if (blocks.length === 0) return;
+
+  uiState.calendarObserver = new IntersectionObserver(
+    () => {
+      syncActiveMonthLabelFromScroll();
+    },
+    {
+      root: dom.calScrollFeed,
+      rootMargin: '-12px 0px -70% 0px',
+      threshold: [0, 0.1, 0.25],
+    }
+  );
+
+  blocks.forEach((block) => uiState.calendarObserver.observe(block));
+}
+
+function syncActiveMonthLabelFromScroll() {
+  const blocks = dom.calMonthsList.querySelectorAll('.cal-month-block');
+  if (blocks.length === 0) return;
+
+  const feedRect = dom.calScrollFeed.getBoundingClientRect();
+  if (feedRect.height === 0) {
+    const sel = parseIsoDate(uiState.calendarSelectedDate || getTodayIsoDate());
+    dom.calActiveMonth.textContent = `${MONTH_NAMES[sel.getMonth()]} ${sel.getFullYear()}`;
+    return;
+  }
+
+  const stickyLine = feedRect.top + 24;
+  let activeLabel = blocks[0].dataset.label;
+
+  for (const block of blocks) {
+    const rect = block.getBoundingClientRect();
+    if (rect.top <= stickyLine) {
+      activeLabel = block.dataset.label;
+    } else {
+      break;
     }
   }
 
-  dom.calSummaryDetails.replaceChildren(fragment);
+  if (activeLabel && dom.calActiveMonth.textContent !== activeLabel) {
+    dom.calActiveMonth.textContent = activeLabel;
+  }
+}
+
+function scrollCalendarToDate(isoDate, behavior = 'smooth') {
+  const feed = dom.calScrollFeed;
+  const cell = dom.calMonthsList.querySelector(`[data-date="${isoDate}"]`);
+  if (!feed || !cell) return;
+
+  const feedRect = feed.getBoundingClientRect();
+  const cellRect = cell.getBoundingClientRect();
+  if (feedRect.height === 0) return;
+
+  const cellOffsetInFeed = cellRect.top - feedRect.top + feed.scrollTop;
+  const targetScrollTop = Math.max(
+    0,
+    cellOffsetInFeed - (feedRect.height / 2) + (cellRect.height / 2)
+  );
+
+  feed.scrollTo({
+    top: targetScrollTop,
+    behavior,
+  });
+
+  const parsed = parseIsoDate(isoDate);
+  dom.calActiveMonth.textContent = `${MONTH_NAMES[parsed.getMonth()]} ${parsed.getFullYear()}`;
 }
 
 function initCalendar() {
-  dom.btnCalPrev.addEventListener('click', () => {
-    uiState.calendarMonth -= 1;
-    if (uiState.calendarMonth < 0) {
-      uiState.calendarMonth = 11;
-      uiState.calendarYear -= 1;
-    }
-    if (uiState.latestForecast && isVaultUnlocked()) {
-      renderCalendarView(getVaultState(), uiState.latestForecast, getTodayIsoDate());
-    }
-  });
-
-  dom.btnCalNext.addEventListener('click', () => {
-    uiState.calendarMonth += 1;
-    if (uiState.calendarMonth > 11) {
-      uiState.calendarMonth = 0;
-      uiState.calendarYear += 1;
-    }
-    if (uiState.latestForecast && isVaultUnlocked()) {
-      renderCalendarView(getVaultState(), uiState.latestForecast, getTodayIsoDate());
-    }
-  });
+  dom.calScrollFeed.addEventListener(
+    'scroll',
+    () => {
+      if (uiState.calendarScrollRaf) return;
+      uiState.calendarScrollRaf = requestAnimationFrame(() => {
+        uiState.calendarScrollRaf = null;
+        syncActiveMonthLabelFromScroll();
+      });
+    },
+    { passive: true }
+  );
 
   dom.btnCalToday.addEventListener('click', () => {
     const today = getTodayIsoDate();
-    const now = parseIsoDate(today);
-    uiState.calendarYear = now.getFullYear();
-    uiState.calendarMonth = now.getMonth();
     uiState.calendarSelectedDate = today;
-    if (uiState.latestForecast && isVaultUnlocked()) {
-      renderCalendarView(getVaultState(), uiState.latestForecast, today);
+    triggerJellyPop(dom.btnCalToday);
+    scrollCalendarToDate(today, 'smooth');
+    const todayCell = dom.calMonthsList.querySelector(`[data-date="${today}"]`);
+    if (todayCell) {
+      triggerJellyPop(todayCell);
     }
   });
 
-  dom.calendarGrid.addEventListener('click', (e) => {
-    const cell = e.target.closest('[data-date]');
-    if (!cell || !uiState.latestForecast || !isVaultUnlocked()) return;
-    uiState.calendarSelectedDate = cell.dataset.date;
-    renderCalendarView(getVaultState(), uiState.latestForecast, getTodayIsoDate());
-  });
-
-  dom.btnCalEditLog.addEventListener('click', () => {
-    openLogDrawer(uiState.calendarSelectedDate || getTodayIsoDate());
+  // 1-Tap Direct-to-Drawer Workflow
+  dom.calMonthsList.addEventListener('click', (e) => {
+    const cell = e.target.closest('.cal-cell[data-date]');
+    if (!cell || !isVaultUnlocked()) return;
+    const iso = cell.dataset.date;
+    uiState.calendarSelectedDate = iso;
+    triggerJellyPop(cell);
+    openLogDrawer(iso);
   });
 }
 
 /* ==========================================================================
-   6. View C: Cycle Insights
+   6. View C: Cycle Insights + Cycle Rhythm Breakdown Card
    ========================================================================== */
 function renderInsightsView(vaultState, forecast) {
   const periodStats = getInsightsPeriodStats(vaultState, forecast);
@@ -1094,22 +1482,30 @@ function renderInsightsView(vaultState, forecast) {
   dom.metricLuteal.textContent = `${forecast.lutealPhaseLength}d`;
 
   // Recent Cycles Bar Chart (last 6 cycles, newest first)
-  const recentCycles = [...(forecast.cycles || [])].slice(-6).reverse();
-  if (recentCycles.length === 0) {
+  const allCycles = forecast.cycles || [];
+  const indexedRecent = allCycles
+    .map((cycle, index) => ({
+      cycle,
+      length: getCycleLength(allCycles, index),
+    }))
+    .slice(-6)
+    .reverse();
+
+  if (indexedRecent.length === 0) {
     dom.insightsCyclesList.innerHTML =
       '<p class="empty-hint">No completed cycles recorded yet.</p>';
   } else {
     const maxLen = Math.max(
       35,
-      ...recentCycles.map((c) => c.cycleLength || forecast.currentCycleDay || 28)
+      ...indexedRecent.map((item) => item.length || forecast.currentCycleDay || 28)
     );
     const fragment = document.createDocumentFragment();
 
-    recentCycles.forEach((cycle) => {
-      const isOngoing = cycle.cycleLength == null;
+    indexedRecent.forEach(({ cycle, length }) => {
+      const isOngoing = length == null;
       const len = isOngoing
         ? Math.max(1, diffDays(cycle.startDate, forecast.today) + 1)
-        : cycle.cycleLength;
+        : length;
       const pct = Math.min(100, Math.round((len / maxLen) * 100));
 
       const row = document.createElement('div');
@@ -1153,12 +1549,12 @@ function renderInsightsView(vaultState, forecast) {
     dom.insightsCyclesList.replaceChildren(fragment);
   }
 
-  // Top Symptoms Summary
+  // Top Symptoms Summary (including quick-checkin Sweet Cravings)
   const counts = {};
   Object.values(vaultState.dailyLogs || {}).forEach((log) => {
     if (!Array.isArray(log?.symptoms)) return;
     log.symptoms.forEach((sym) => {
-      if (VALID_SYMPTOMS.has(sym)) {
+      if (VALID_SYMPTOMS.has(sym) || sym === 'sweet_cravings') {
         counts[sym] = (counts[sym] || 0) + 1;
       }
     });
@@ -1206,6 +1602,29 @@ function renderInsightsView(vaultState, forecast) {
 
     dom.insightsSymptomsList.replaceChildren(fragment);
   }
+
+  // Cycle Rhythm Breakdown Segmented Bar
+  renderCycleRhythm(forecast, periodStats);
+}
+
+function renderCycleRhythm(forecast, periodStats) {
+  const total = Math.max(15, forecast.predictedCycleLength || 28);
+  const menstrual = Math.min(total - 3, Math.max(1, periodStats.avgPeriodDays || 5));
+  const luteal = Math.min(total - menstrual - 2, Math.max(1, forecast.lutealPhaseLength || 14));
+  const ovulation = 1;
+  const follicular = Math.max(1, total - menstrual - luteal - ovulation);
+
+  dom.rhythmTotalDays.textContent = `${total}d cycle`;
+
+  dom.rhythmSegMenstrual.style.flexGrow = String(menstrual);
+  dom.rhythmSegFollicular.style.flexGrow = String(follicular);
+  dom.rhythmSegOvulation.style.flexGrow = String(ovulation);
+  dom.rhythmSegLuteal.style.flexGrow = String(luteal);
+
+  dom.rhythmDaysMenstrual.textContent = `${menstrual}d`;
+  dom.rhythmDaysFollicular.textContent = `${follicular}d`;
+  dom.rhythmDaysOvulation.textContent = `${ovulation}d`;
+  dom.rhythmDaysLuteal.textContent = `${luteal}d`;
 }
 
 /* ==========================================================================
@@ -1239,7 +1658,6 @@ function triggerFileDownload(filename, content) {
 }
 
 function initSettings() {
-  // Display name
   const saveName = async () => {
     if (!isVaultUnlocked()) return;
     const nextName = dom.settingName.value.trim();
@@ -1250,7 +1668,6 @@ function initSettings() {
   };
   dom.settingName.addEventListener('change', saveName);
 
-  // Conception chance toggle
   dom.settingShowConception.addEventListener('change', async () => {
     if (!isVaultUnlocked()) return;
     const show = dom.settingShowConception.checked;
@@ -1260,7 +1677,6 @@ function initSettings() {
     renderApp();
   });
 
-  // Numeric steppers
   document.querySelectorAll('.stepper').forEach((stepper) => {
     const key = stepper.dataset.setting;
     const limits = SETTING_LIMITS[key];
@@ -1279,7 +1695,6 @@ function initSettings() {
     });
   });
 
-  // Import Flo History (.json)
   dom.btnImportFlo.addEventListener('click', () => {
     dom.fileImportFlo.value = '';
     dom.fileImportFlo.click();
@@ -1299,7 +1714,6 @@ function initSettings() {
     }
   });
 
-  // Export Encrypted Backup (.enc.json)
   dom.btnExportBackup.addEventListener('click', () => {
     openModal({
       title: 'Export Encrypted Backup',
@@ -1326,7 +1740,6 @@ function initSettings() {
     });
   });
 
-  // Import Encrypted Backup (.enc.json)
   dom.btnImportBackup.addEventListener('click', () => {
     dom.fileImportBackup.value = '';
     dom.fileImportBackup.click();
@@ -1360,7 +1773,6 @@ function initSettings() {
     });
   });
 
-  // Change Vault PIN
   dom.btnChangePin.addEventListener('click', () => {
     openModal({
       title: 'Change Vault PIN',
@@ -1392,7 +1804,6 @@ function initSettings() {
     });
   });
 
-  // Panic Wipe (2-Step Confirmation)
   dom.btnPanicWipe.addEventListener('click', () => {
     openModal({
       title: 'Panic Wipe Vault?',
@@ -1509,8 +1920,23 @@ function initModal() {
 }
 
 /* ==========================================================================
-   9. Floating Cocoa Dock Tab Switching
+   9. Floating Cocoa Dock & Sliding Custard Pill Indicator
    ========================================================================== */
+function updateDockIndicator(animate = true) {
+  const activeTab = dom.dockPill.querySelector('.dock-tab--active');
+  if (!activeTab || dom.appMain.hidden) return;
+
+  if (!animate) {
+    dom.dockIndicator.style.transition = 'none';
+  }
+  dom.dockIndicator.style.width = `${activeTab.offsetWidth}px`;
+  dom.dockIndicator.style.transform = `translateX(${activeTab.offsetLeft}px)`;
+  if (!animate) {
+    void dom.dockIndicator.offsetWidth;
+    dom.dockIndicator.style.transition = '';
+  }
+}
+
 function switchTab(tabName) {
   uiState.activeTab = tabName;
 
@@ -1525,11 +1951,27 @@ function switchTab(tabName) {
     view.hidden = !isActive;
     view.classList.toggle('app-view--active', isActive);
   });
+
+  requestAnimationFrame(() => updateDockIndicator(true));
+
+  if (tabName === 'calendar') {
+    const today = getTodayIsoDate();
+    uiState.calendarSelectedDate = today;
+    requestAnimationFrame(() => {
+      scrollCalendarToDate(today, 'smooth');
+    });
+  }
 }
 
 function initDock() {
   dom.dockTabs.forEach((tab) => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+
+  window.addEventListener('resize', () => {
+    if (!dom.appMain.hidden) {
+      updateDockIndicator(false);
+    }
   });
 }
 
@@ -1636,6 +2078,7 @@ function openLogDrawer(isoDate = uiState.selectedDate) {
 
   if (uiState.drawerOpen) return;
   uiState.drawerOpen = true;
+  dom.btnQuickLog.classList.add('is-open');
   dom.drawerBackdrop.hidden = false;
   dom.logDrawer.inert = false;
   dom.logDrawer.setAttribute('aria-hidden', 'false');
@@ -1649,6 +2092,7 @@ function openLogDrawer(isoDate = uiState.selectedDate) {
 function closeLogDrawer(immediate = false) {
   if (!uiState.drawerOpen) return;
   uiState.drawerOpen = false;
+  dom.btnQuickLog.classList.remove('is-open');
   dom.drawerBackdrop.classList.remove('is-open');
   dom.logDrawer.classList.remove('is-open');
   dom.logDrawer.setAttribute('aria-hidden', 'true');
@@ -1663,13 +2107,22 @@ function closeLogDrawer(immediate = false) {
     if (!uiState.drawerOpen) {
       dom.drawerBackdrop.hidden = true;
     }
-  }, 320);
+  }, 340);
 }
 
 function initDrawer() {
   dom.logDrawer.inert = true;
 
-  dom.btnQuickLog.addEventListener('click', () => openLogDrawer(uiState.selectedDate));
+  dom.btnQuickLog.addEventListener('click', () => {
+    if (uiState.drawerOpen) {
+      closeLogDrawer(false);
+    } else {
+      const targetDate = uiState.activeTab === 'calendar'
+        ? uiState.calendarSelectedDate
+        : uiState.selectedDate;
+      openLogDrawer(targetDate || getTodayIsoDate());
+    }
+  });
   dom.btnCloseDrawer.addEventListener('click', () => closeLogDrawer(false));
   dom.drawerBackdrop.addEventListener('click', () => closeLogDrawer(false));
 
@@ -1683,7 +2136,7 @@ function initDrawer() {
     }
   });
 
-  // Segmented flow selector
+  // Segmented flow selector with jellyPop
   dom.drawerFlowGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-flow]');
     if (!btn) return;
@@ -1692,17 +2145,19 @@ function initDrawer() {
       b.classList.toggle('seg-btn--active', active);
       b.setAttribute('aria-checked', String(active));
     });
+    triggerJellyPop(btn);
   });
 
-  // Multi-select symptoms
+  // Multi-select symptoms with jellyPop
   dom.drawerSymptomsGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-symptom]');
     if (!btn) return;
     const selected = btn.classList.toggle('is-selected');
     btn.setAttribute('aria-pressed', String(selected));
+    triggerJellyPop(btn);
   });
 
-  // Single-select mood, LH, and mucus groups
+  // Single-select mood, LH, and mucus groups with jellyPop
   [dom.drawerMoodGroup, dom.drawerLhGroup, dom.drawerMucusGroup].forEach((group) => {
     group.addEventListener('click', (e) => {
       const btn = e.target.closest('.chip-btn');
@@ -1716,6 +2171,7 @@ function initDrawer() {
         btn.classList.add('is-selected');
         btn.setAttribute('aria-pressed', 'true');
       }
+      triggerJellyPop(btn);
     });
   });
 
@@ -1736,6 +2192,7 @@ function initDrawer() {
     const entry = collectDrawerEntry();
     const isNowBleeding = BLEEDING_FLOWS.has(entry.flow);
 
+    triggerJellyPop(dom.btnSaveLog);
     dom.btnSaveLog.disabled = true;
     try {
       await commitVaultState((draft) => {
@@ -1755,6 +2212,7 @@ function initDrawer() {
           removedFlowDates,
         });
       });
+      uiState.speechOverrideKey = null;
       closeLogDrawer(false);
       renderApp();
       showToast('Entry saved');

@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Purin Cycle — Phase 3 Production Design System
-   Mobile-First Native App Shell (390x844 canvas, 430px desktop frame)
+   Purin Cycle — Pompompurin World Tactile Sanrio Design System (Phase 3)
+   Warm Custard, Beret Cocoa Ink Outlines, 3D Pressable Buttons & Clue Calendar
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -36,30 +36,38 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. Semantic Design Tokens (Pompompurin Custard & Cocoa Palette)
+   2. Semantic Design Tokens (Pompompurin World Palette)
    -------------------------------------------------------------------------- */
 :root {
-  /* Core Surfaces & Typography */
-  --bg-outer-desktop: #F5EEDB;     /* Soft Custard Backdrop on Desktop */
+  /* Core Surfaces & Ink Outlines */
+  --bg-outer-desktop: #E8DFD1;     /* Soft Warm-Taupe Desktop Backdrop */
   --bg-app: #FFFDF5;               /* Warm Vanilla Cream App Canvas */
-  --bg-card: #FFFFFF;              /* Pure Whipped White Cards */
-  --bg-pill-soft: #FFF6D6;         /* Soft Custard Highlight */
-  --border-hairline: rgba(74, 50, 34, 0.08);
+  --bg-card: #FFF9E6;              /* Warm Cream-Custard Sanrio Card */
+  --bg-card-white: #FFFFFF;        /* Pure Cream Highlight Surface */
+  --bg-pill-soft: #FFF2C2;         /* Soft Custard Highlight */
+  --ink-cocoa: #4A3222;            /* Beret Cocoa Ink Outline */
+  --ink-ledge-soft: #DFC9A6;       /* Warm Biscuit Info-Card Ledge */
+  --border-hairline: rgba(74, 50, 34, 0.12);
 
   --text-primary: #4A3222;         /* Beret Cocoa Brown */
-  --text-secondary: #8C705B;       /* Warm Toffee */
+  --text-secondary: #836652;       /* Warm Caramel Toffee */
   --accent-custard: #F7D358;       /* Pompompurin Custard Gold */
   --accent-custard-press: #EBC13D; /* Pressed Custard Gold */
+  --caramel-cap: #8C5A32;          /* Pudding Caramel Top */
   --dock-cocoa: #3B2619;           /* Floating Navigation Dock */
 
-  /* Phase Accent Tokens (Ring Arcs, Ring Tints & Week Pills) */
-  --phase-menstrual: #E06D6B;      /* Strawberry Rose */
-  --phase-menstrual-tint: #FDECEC;
+  /* Phase Accent Tokens */
+  --phase-menstrual: #D96B66;      /* Terracotta Rose */
+  --phase-menstrual-soft: #F3B8B5; /* Expected Period Blush */
+  --phase-menstrual-tint: #FBE1DF; /* Predicted Period Fill */
+  --phase-menstrual-text: #7A2E2C;
   --phase-follicular: #F2C138;     /* Custard Gold */
   --phase-follicular-tint: #FFF7D6;
   --phase-fertile: #6BA37C;        /* Matcha Sage */
-  --phase-fertile-tint: #EAF5EE;
-  --phase-ovulation: #3F7A52;      /* Deep Matcha */
+  --phase-fertile-tint: #E3F2E8;   /* Matcha Mint Fill */
+  --phase-fertile-text: #2F6340;
+  --phase-ovulation: #4A7856;      /* Deep Matcha Fill */
+  --phase-ovulation-dot: #3F7A52;  /* Ring Ovulation Marker */
   --phase-ovulation-tint: #E1F2E7;
   --phase-luteal: #E59A59;         /* Caramel Peach */
   --phase-luteal-tint: #FDF2E7;
@@ -69,21 +77,24 @@
   --active-phase-tint: var(--phase-follicular-tint);
 
   /* Elevation & Spring Physics */
-  --shadow-card: 0 10px 28px rgba(74, 50, 34, 0.07);
-  --shadow-dock: 0 12px 32px rgba(59, 38, 25, 0.24);
-  --shadow-shell: 0 24px 64px rgba(74, 50, 34, 0.14);
+  --shadow-info-card: 0 3px 0 var(--ink-ledge-soft);
+  --shadow-btn-3d: 0 4px 0 var(--ink-cocoa);
+  --shadow-btn-3d-sm: 0 3px 0 var(--ink-cocoa);
+  --shadow-btn-press: 0 1px 0 var(--ink-cocoa);
+  --shadow-dock: 0 10px 26px rgba(59, 38, 25, 0.24);
+  --shadow-shell: 0 24px 64px rgba(74, 50, 34, 0.18);
   --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-sheet: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Layout & Font */
   --font-sans: 'Nunito', ui-rounded, 'SF Pro Rounded', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --radius-card: 22px;
+  --radius-card: 16px;
   --radius-pill: 999px;
 }
 
 .app-shell[data-phase="menstrual"] {
   --active-phase: var(--phase-menstrual);
-  --active-phase-tint: var(--phase-menstrual-tint);
+  --active-phase-tint: #FDECEC;
 }
 .app-shell[data-phase="follicular"] {
   --active-phase: var(--phase-follicular);
@@ -103,7 +114,7 @@
 }
 .app-shell[data-phase="late"] {
   --active-phase: var(--phase-menstrual);
-  --active-phase-tint: var(--phase-menstrual-tint);
+  --active-phase-tint: #FDECEC;
 }
 .app-shell[data-phase="unknown"] {
   --active-phase: var(--phase-follicular);
@@ -111,7 +122,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. Base Reset & Native Mobile Ergonomics
+   3. Base Reset & Tactile Pressable Physics
    -------------------------------------------------------------------------- */
 *,
 *::before,
@@ -132,7 +143,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.36;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -150,7 +161,11 @@ button {
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
-  transition: transform 0.18s var(--spring-bounce), background-color 0.18s ease, opacity 0.18s ease;
+  transition:
+    transform 0.18s var(--spring-bounce),
+    background-color 0.16s ease,
+    box-shadow 0.14s ease,
+    opacity 0.16s ease;
 }
 
 button:active {
@@ -160,7 +175,7 @@ button:active {
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--accent-custard-press);
+  outline: 2px solid var(--ink-cocoa);
   outline-offset: 2px;
 }
 
@@ -172,8 +187,12 @@ textarea:focus-visible {
   display: none !important;
 }
 
+.is-jelly {
+  animation: jellyPop 0.42s var(--spring-bounce) 1;
+}
+
 /* --------------------------------------------------------------------------
-   4. Desktop Phone Frame & Root App Shell
+   4. Rounded Mobile App Container (Desktop 430px Frame)
    -------------------------------------------------------------------------- */
 .app-viewport {
   width: 100%;
@@ -188,8 +207,9 @@ textarea:focus-visible {
   position: relative;
   width: 100%;
   max-width: 430px;
-  height: 100dvh;
-  background: var(--bg-app);
+  height: 844px;
+  max-height: 100dvh;
+  background-color: #FFFDF5;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -200,95 +220,302 @@ textarea:focus-visible {
     padding: 16px;
   }
   .app-shell {
-    height: min(844px, calc(100dvh - 32px));
-    border-radius: 36px;
+    height: 844px;
+    max-height: calc(100dvh - 32px);
+    border-radius: 38px;
+    overflow: hidden;
     box-shadow: var(--shadow-shell);
-    border: 1px solid var(--border-hairline);
+    border: 2.5px solid var(--ink-cocoa);
   }
 }
 
 /* --------------------------------------------------------------------------
-   5. Layer 1: Custard Splash Screen (~1.5s)
+   5. Layer 1: 5s "Pudding Pop-Out" Caramel Stage Splash Screen
    -------------------------------------------------------------------------- */
 .splash-screen {
   position: absolute;
   inset: 0;
   z-index: 100;
-  background: var(--accent-custard);
+  background-color: #FFFDF5;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   cursor: pointer;
   user-select: none;
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transform: translateY(0);
+  animation: splash-stage-exit 0.35s var(--ease-sheet) 4.65s forwards;
+  will-change: opacity, transform;
 }
 
 .splash-screen.is-fading {
   opacity: 0;
+  transform: translateY(-16px);
   pointer-events: none;
+}
+
+.splash-caramel-drip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 96px;
+  display: block;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.splash-custard-hill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 110px;
+  display: block;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .splash-content {
   position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 24px;
+  padding: 16px;
+  margin-top: -12px;
 }
 
-.splash-mascot {
-  width: 176px;
-  height: auto;
-  object-fit: contain;
-  animation:
-    splash-spring-up 0.55s var(--spring-bounce) both,
-    splash-wiggle 0.6s ease-in-out 0.55s 1;
+/* 260px Center Stage */
+.splash-stage {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 260px Rotating Scalloped Custard Stamp */
+.splash-stamp {
+  position: absolute;
+  inset: 0;
+  width: 260px;
+  height: 260px;
+  z-index: 2;
+  pointer-events: none;
+  animation: splash-stamp-spin 24s linear infinite;
   will-change: transform;
 }
 
-.splash-title {
-  margin-top: 14px;
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-  opacity: 0;
-  animation: fade-in-up 0.45s ease 0.45s forwards;
-}
-
-.splash-subtitle {
-  margin-top: 4px;
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(74, 50, 34, 0.82);
-  opacity: 0;
-  animation: fade-in-up 0.45s ease 0.58s forwards;
-}
-
-.splash-sparkles {
+/* 6 Radial Burst & Orbiting Motifs (Act 2: 1.3s+) */
+.splash-motifs {
   position: absolute;
-  inset: -16px -24px auto;
-  height: 190px;
+  inset: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
-.sparkle {
+.splash-motif {
   position: absolute;
-  color: #FFFDF5;
-  font-size: 18px;
+  top: 50%;
+  left: 50%;
+  margin-top: -11px;
+  margin-left: -11px;
   opacity: 0;
-  animation: sparkle-pop 0.7s ease 0.55s forwards;
+  animation: splash-motif-burst 0.65s var(--spring-bounce) 1.32s forwards;
+  will-change: transform, opacity;
 }
 
-.sparkle-1 { top: 12px; left: 14%; font-size: 20px; }
-.sparkle-2 { top: 4px; right: 16%; font-size: 15px; animation-delay: 0.65s; }
-.sparkle-3 { top: 76px; left: 4%; font-size: 14px; animation-delay: 0.7s; }
-.sparkle-4 { top: 68px; right: 6%; font-size: 19px; animation-delay: 0.6s; }
+.splash-motif--1 { --tx: -124px; --ty: -102px; animation-delay: 1.32s; }
+.splash-motif--2 { --tx: 126px;  --ty: -94px;  animation-delay: 1.36s; }
+.splash-motif--3 { --tx: -144px; --ty: 8px;    animation-delay: 1.40s; }
+.splash-motif--4 { --tx: 144px;  --ty: 14px;   animation-delay: 1.44s; }
+.splash-motif--5 { --tx: -112px; --ty: 112px;  animation-delay: 1.48s; }
+.splash-motif--6 { --tx: 116px;  --ty: 108px;  animation-delay: 1.52s; }
+
+.splash-motif-icon {
+  display: block;
+  animation: splash-orbit-float 2.4s ease-in-out 1.95s infinite alternate;
+  will-change: transform;
+}
+
+.splash-motif--2 .splash-motif-icon,
+.splash-motif--4 .splash-motif-icon,
+.splash-motif--6 .splash-motif-icon {
+  animation-delay: 2.25s;
+}
+
+/* Act 1: Caramel Custard Pudding Cup SVG (115px) */
+.splash-pudding-svg {
+  position: absolute;
+  z-index: 3;
+  width: 115px;
+  height: auto;
+  transform-origin: center 84%;
+  animation:
+    splash-pudding-act1 1.3s ease-out 0s both,
+    splash-pudding-pop-out 0.22s ease-in 1.3s forwards;
+  will-change: transform, opacity;
+}
+
+/* Act 2 & 4: Pompompurin Waving (165px) */
+.splash-mascot {
+  position: relative;
+  z-index: 4;
+  width: 165px;
+  height: auto;
+  object-fit: contain;
+  margin-top: 6px;
+  opacity: 0;
+  transform-origin: center bottom;
+  animation:
+    splash-purin-pop 0.65s var(--spring-bounce) 1.32s both,
+    splash-double-wave 1.55s ease-in-out 3.1s 1;
+  will-change: transform, opacity;
+}
+
+/* Act 4: Dancing Music Notes near Raised Paw */
+.splash-paw-note {
+  position: absolute;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.splash-paw-note--1 {
+  top: 56px;
+  left: 30px;
+  animation: splash-paw-bob-1 1.55s ease-in-out 3.1s forwards;
+}
+
+.splash-paw-note--2 {
+  top: 38px;
+  left: 50px;
+  animation: splash-paw-bob-2 1.55s ease-in-out 3.22s forwards;
+}
+
+/* Act 3: Sanrio Speech Pill */
+.splash-speech-pill {
+  position: absolute;
+  top: -4px;
+  right: -18px;
+  z-index: 6;
+  padding: 6px 14px;
+  background: #FFFDF5;
+  border: 2px solid #4A3222;
+  box-shadow: 0 3px 0 #4A3222;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #4A3222;
+  white-space: nowrap;
+  opacity: 0;
+  transform-origin: bottom left;
+  animation: splash-bubble-pop 0.45s var(--spring-bounce) 2.1s both;
+  will-change: transform, opacity;
+}
+
+.splash-speech-pill::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  bottom: -8px;
+  border-width: 8px 6px 0 6px;
+  border-style: solid;
+  border-color: #4A3222 transparent transparent transparent;
+}
+
+.splash-speech-pill::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  bottom: -5px;
+  border-width: 6px 4px 0 4px;
+  border-style: solid;
+  border-color: #FFFDF5 transparent transparent transparent;
+}
+
+/* Grounded Oval Cocoa Contact Shadow beneath Stamp */
+.splash-shadow {
+  display: block;
+  width: 96px;
+  height: 15px;
+  margin-top: 6px;
+  background: rgba(74, 50, 34, 0.16);
+  border-radius: 50%;
+  animation: splash-shadow-pulse 1.95s ease-out 0s both;
+  will-change: transform, opacity;
+}
+
+/* Act 3: Puffy Sanrio Vinyl Sticker Wordmark ("Beret-on-P") */
+.splash-wordmark {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.splash-word {
+  display: block;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.splash-word--purin {
+  position: relative;
+  z-index: 2;
+  transform-origin: center center;
+  animation: splash-word-purin-pop 0.5s var(--spring-bounce) 2.5s both;
+}
+
+.splash-word--cycle {
+  position: relative;
+  z-index: 1;
+  margin-top: -14px;
+  transform-origin: center center;
+  animation: splash-word-cycle-pop 0.5s var(--spring-bounce) 2.63s both;
+}
+
+.splash-word-svg {
+  display: block;
+  overflow: visible;
+}
+
+.splash-sticker-text {
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  stroke: #4A3222;
+  stroke-width: 7px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 4px 0 #4A3222);
+}
+
+.splash-sticker-text--purin {
+  font-size: 46px;
+  fill: #F7D358;
+}
+
+.splash-sticker-text--cycle {
+  font-size: 40px;
+  fill: #FFFDF5;
+}
+
+.splash-p-beret {
+  transform-origin: 0px 4px;
+  transform: rotate(-12deg);
+  animation: splash-beret-wiggle 0.48s var(--spring-bounce) 2.63s both;
+}
 
 /* --------------------------------------------------------------------------
-   6. Layer 2: Cocoa PIN Gate
+   6. Layer 2: Cocoa PIN Gate & Custard Pudding Dots
    -------------------------------------------------------------------------- */
 .pin-gate {
   position: absolute;
@@ -312,7 +539,7 @@ textarea:focus-visible {
 }
 
 .beret-emblem {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .pin-title {
@@ -339,14 +566,21 @@ textarea:focus-visible {
 }
 
 .btn-onboarding-flo {
-  min-height: 38px;
+  min-height: 40px;
   padding: 6px 12px;
   border-radius: 12px;
   background: var(--bg-pill-soft);
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: var(--shadow-btn-3d-sm);
   color: var(--text-primary);
   font-size: 12px;
   font-weight: 800;
   text-align: center;
+}
+
+.btn-onboarding-flo:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
 }
 
 .onboarding-flo-status {
@@ -374,10 +608,10 @@ textarea:focus-visible {
   min-height: 44px;
   padding: 10px 14px;
   border-radius: 14px;
-  border: 1.5px solid var(--border-hairline);
-  background: var(--bg-card);
+  border: 2px solid var(--ink-cocoa);
+  background: var(--bg-card-white);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -386,11 +620,11 @@ textarea:focus-visible {
   text-align: right;
 }
 
-/* 6 Custard-Pudding PIN Dots */
+/* 6 Mini Custard-Gold Pudding PIN Indicators */
 .pin-dots {
   display: flex;
   gap: 14px;
-  margin: 26px 0 10px;
+  margin: 24px 0 10px;
 }
 
 .pin-dots.is-shaking {
@@ -398,18 +632,20 @@ textarea:focus-visible {
 }
 
 .pin-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--text-primary);
-  background: transparent;
-  transition: transform 0.2s var(--spring-bounce), background-color 0.16s ease, border-color 0.16s ease;
+  width: 18px;
+  height: 17px;
+  border-radius: 50% 50% 42% 42% / 60% 60% 40% 40%;
+  border: 2px solid var(--ink-cocoa);
+  background: var(--bg-card);
+  transition: background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .pin-dot.is-filled {
-  background: #F7D358;
-  border-color: #4A3222;
-  transform: scale(1.18);
+  background: var(--accent-custard);
+  border-color: var(--ink-cocoa);
+  box-shadow:
+    inset 0 4.5px 0 var(--caramel-cap),
+    0 2px 0 var(--ink-cocoa);
 }
 
 .pin-error {
@@ -417,10 +653,10 @@ textarea:focus-visible {
   font-size: 13px;
   font-weight: 700;
   color: var(--phase-menstrual);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
-/* 3 x 4 Circular Cocoa-Outlined Keypad */
+/* 3 x 4 Pressable 3D Cocoa-Outlined Keypad */
 .pin-keypad {
   display: grid;
   grid-template-columns: repeat(3, 68px);
@@ -432,7 +668,7 @@ textarea:focus-visible {
   width: 68px;
   height: 68px;
   border-radius: 50%;
-  border: 1.5px solid rgba(74, 50, 34, 0.22);
+  border: 2px solid var(--ink-cocoa);
   background: var(--bg-card);
   color: var(--text-primary);
   font-size: 24px;
@@ -440,7 +676,7 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(74, 50, 34, 0.05);
+  box-shadow: var(--shadow-btn-3d);
 }
 
 .keypad-btn:hover {
@@ -449,16 +685,18 @@ textarea:focus-visible {
 
 .keypad-btn:active {
   background: var(--accent-custard);
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
 }
 
 .keypad-btn--action {
   width: 68px;
   height: 68px;
   font-size: 13px;
-  font-weight: 700;
-  border: 1.5px solid rgba(74, 50, 34, 0.14);
-  background: rgba(255, 253, 245, 0.65);
-  box-shadow: none;
+  font-weight: 800;
+  border: 2px solid var(--ink-cocoa);
+  background: var(--bg-app);
+  box-shadow: 0 3px 0 var(--ink-ledge-soft);
   color: var(--text-secondary);
 }
 
@@ -467,116 +705,211 @@ textarea:focus-visible {
   color: var(--text-primary);
 }
 
+.keypad-btn--action:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink-ledge-soft);
+}
+
 /* --------------------------------------------------------------------------
-   7. Layer 3: Main App Shell & Scrollable Views
+   7. Layer 3: Main App Shell, Caramel-Scalloped Custard Header & Views
    -------------------------------------------------------------------------- */
 .app-main {
   position: relative;
   flex: 1;
+  min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
   overflow: hidden;
 }
 
 .app-views {
   flex: 1;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  padding: calc(16px + env(safe-area-inset-top)) 20px calc(104px + env(safe-area-inset-bottom));
-  scrollbar-width: none;
-}
-
-.app-views::-webkit-scrollbar {
-  display: none;
+  min-height: 0;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-view {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-/* Top Header */
+.app-view--home {
+  height: 100%;
+  overflow: hidden;
+  background-color: #FFFDF5;
+}
+
+.app-view--scroll {
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+
+.app-view--scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Caramel-Scalloped Custard Header Accent */
+.custard-header-wrap {
+  flex-shrink: 0;
+  width: 100%;
+  background: var(--accent-custard);
+  padding-top: env(safe-area-inset-top);
+  position: relative;
+}
+
+.custard-scallop {
+  display: block;
+  width: 100%;
+  height: 16px;
+  background: var(--bg-app);
+  margin-bottom: -1px;
+}
+
+.custard-header-wrap--compact .custard-scallop {
+  height: 14px;
+}
+
 .top-header,
 .view-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 52px;
+  min-height: 46px;
+  padding: 8px 16px 4px;
+  background: var(--accent-custard);
+}
+
+.top-header--compact {
+  min-height: 44px;
+  padding: 6px 16px 2px;
 }
 
 .greeting-title,
 .view-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1.15;
   color: var(--text-primary);
 }
 
 .greeting-date {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(74, 50, 34, 0.8);
+  margin-top: 1px;
 }
 
 .header-lock-btn {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: var(--bg-card);
-  border: 1px solid var(--border-hairline);
-  box-shadow: var(--shadow-card);
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: var(--shadow-btn-3d-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
+  flex-shrink: 0;
 }
 
+.header-lock-btn:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
+}
+
+/* View Content Body */
+.view-body {
+  flex: 1;
+  padding: 10px 16px calc(94px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 3-Zone Balanced Home Layout (Fits cleanly in 390x844 without scrolling) */
+.view-body--home {
+  flex: 1;
+  min-height: 0;
+  padding: 4px 14px calc(82px + env(safe-area-inset-bottom));
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.home-top-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.home-hero-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+/* --------------------------------------------------------------------------
+   8. View A: Home (Cycle) Components
+   -------------------------------------------------------------------------- */
 /* 7-Day Horizontal Week Strip */
 .week-strip {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 4px;
 }
 
 .week-pill {
-  min-height: 58px;
-  border-radius: 16px;
+  min-height: 46px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 10.5px;
   font-weight: 700;
-  position: relative;
+  border: 2px solid transparent;
 }
 
 .week-pill-num {
-  font-size: 15px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--text-primary);
 }
 
 .week-pill.is-selected {
   background: var(--active-phase);
+  border-color: var(--ink-cocoa);
+  box-shadow: 0 3px 0 var(--ink-cocoa);
   color: #FFFFFF;
-  box-shadow: 0 6px 16px rgba(74, 50, 34, 0.14);
 }
 
 .week-pill.is-selected .week-pill-num {
   color: #FFFFFF;
 }
 
+.week-pill.is-selected:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
+}
+
 .week-pill-dot {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: var(--text-primary);
+  background: var(--ink-cocoa);
   opacity: 0.45;
 }
 
@@ -585,7 +918,7 @@ textarea:focus-visible {
 }
 
 .week-pill-today {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -601,49 +934,169 @@ textarea:focus-visible {
   opacity: 0;
 }
 
-/* Hero Dual-Arc SVG Cycle Ring (240 x 240) */
+/* 3 Non-Redundant Bento Cards (Ovulation, Next Period, Fertility) */
+.bento-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.bento-row.bento-row--two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.bento-card {
+  background: var(--bg-card);
+  border: 2px solid var(--ink-cocoa);
+  border-radius: var(--radius-card);
+  padding: 8px 6px;
+  box-shadow: var(--shadow-info-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1px;
+}
+
+.bento-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  line-height: 1.15;
+}
+
+.bento-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.bento-sub {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.bento-conception-val {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.bento-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-custard-press);
+  border: 1.5px solid var(--ink-cocoa);
+  flex-shrink: 0;
+}
+
+.bento-conception-val.is-high {
+  color: var(--phase-fertile-text);
+}
+
+.bento-conception-val.is-high .bento-dot {
+  background: var(--phase-ovulation);
+}
+
+/* Cocoa-Outlined Purin Speech Bubble */
+.purin-speech-bubble {
+  position: relative;
+  width: 100%;
+  max-width: 344px;
+  background: var(--bg-card-white);
+  border: 2px solid var(--ink-cocoa);
+  border-radius: 16px;
+  padding: 7px 12px;
+  box-shadow: 0 3px 0 var(--ink-ledge-soft);
+  text-align: center;
+}
+
+.purin-speech-bubble::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  transform: translateX(-50%);
+  border-width: 9px 8px 0 8px;
+  border-style: solid;
+  border-color: var(--ink-cocoa) transparent transparent transparent;
+}
+
+.purin-speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border-width: 7px 6px 0 6px;
+  border-style: solid;
+  border-color: var(--bg-card-white) transparent transparent transparent;
+}
+
+.purin-speech-text {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.28;
+}
+
+/* Hero Dual-Arc SVG Cycle Ring (224 x 224, Beret Marker & 120px Mascot) */
 .cycle-ring-wrap {
   display: flex;
   justify-content: center;
-  margin: 4px 0;
+  margin-top: 0;
 }
 
 .cycle-ring {
   position: relative;
-  width: 240px;
-  height: 240px;
+  width: 224px;
+  height: 224px;
   border-radius: 50%;
   background: var(--active-phase-tint);
-  box-shadow: var(--shadow-card);
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: 0 4px 0 var(--ink-ledge-soft);
   transition: background-color 0.35s ease;
 }
 
 .cycle-ring-svg {
   position: absolute;
-  inset: 0;
+  inset: -2px;
+  width: 224px;
+  height: 224px;
   transform: rotate(-90deg);
+  pointer-events: none;
+  overflow: visible;
 }
 
 .ring-track {
   fill: none;
-  stroke: rgba(74, 50, 34, 0.08);
-  stroke-width: 10;
+  stroke: rgba(74, 50, 34, 0.1);
+  stroke-width: 13;
 }
 
 .ring-arc {
   fill: none;
-  stroke-width: 10;
+  stroke-width: 13;
   stroke-linecap: round;
-  stroke-dasharray: 0 666;
+  stroke-dasharray: 0 604;
   transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
 }
 
 .ring-arc--period-expected {
-  stroke: #F3B8B5;
+  stroke: var(--phase-menstrual-soft);
 }
 
 .ring-arc--period {
-  stroke: #D96B66;
+  stroke: var(--phase-menstrual);
 }
 
 .ring-arc--fertile {
@@ -651,30 +1104,28 @@ textarea:focus-visible {
 }
 
 .ring-ovulation-dot {
-  fill: #3F7A52;
+  fill: var(--phase-ovulation-dot);
   stroke: #FFFDF5;
-  stroke-width: 1.8;
+  stroke-width: 2;
   opacity: 0;
   transition: opacity 0.25s ease;
 }
 
-.ring-marker {
-  fill: var(--bg-card);
-  stroke: var(--active-phase);
-  stroke-width: 4;
-  filter: drop-shadow(0 2px 6px rgba(74, 50, 34, 0.25));
+.ring-beret-marker {
+  filter: drop-shadow(0 2px 3px rgba(74, 50, 34, 0.25));
+  transition: opacity 0.25s ease;
 }
 
 .cycle-ring-inner {
   position: absolute;
-  inset: 14px;
+  inset: 19px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding-top: 24px;
+  padding-top: 10px;
 }
 
 .cycle-ring-copy {
@@ -683,419 +1134,624 @@ textarea:focus-visible {
   align-items: center;
   text-align: center;
   z-index: 2;
+  pointer-events: none;
+  padding: 0 8px;
 }
 
 .cycle-day-label {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.05;
   color: var(--text-primary);
 }
 
 .cycle-phase-label {
-  margin-top: 4px;
-  font-size: 13px;
-  font-weight: 700;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 800;
   color: var(--text-secondary);
 }
 
 .cycle-mascot-window {
   width: 100%;
-  height: 124px;
-  margin-bottom: -8px;
+  height: 106px;
+  margin-bottom: -6px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
-  pointer-events: none;
+  border-radius: 0 0 100px 100px;
+}
+
+.cycle-mascot-window:active {
+  transform: none;
 }
 
 .cycle-mascot-img {
-  width: 140px;
+  width: 120px;
   height: auto;
-  max-height: 124px;
+  max-height: 106px;
   object-fit: contain;
   object-position: center bottom;
+  transform-origin: center bottom;
   animation: mascot-breathe 3.2s ease-in-out infinite;
   will-change: transform;
 }
 
-/* Phase-specific mascot framing rules anchored cleanly to the lower ring curve */
-.mascot-menstrual  { width: 138px; object-position: center bottom; }
-.mascot-follicular { width: 142px; object-position: center bottom; }
-.mascot-ovulation  { width: 138px; object-position: center bottom; }
-.mascot-fertile    { width: 138px; object-position: center bottom; }
-.mascot-luteal     { width: 142px; object-position: center bottom; }
-
-/* Legend & Primary Action CTA */
-.ring-legend {
-  display: flex;
-  justify-content: center;
-  gap: 18px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
+.cycle-mascot-img.is-jelly {
+  animation: jellyPop 0.44s var(--spring-bounce) 1;
 }
 
-.legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
+.mascot-menstrual  { width: 120px; }
+.mascot-follicular { width: 120px; }
+.mascot-ovulation  { width: 120px; }
+.mascot-fertile    { width: 120px; }
+.mascot-luteal     { width: 120px; }
 
-.legend-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.legend-dot--period  { background: #D96B66; }
-.legend-dot--fertile { background: var(--phase-fertile); }
-
+/* Pressable 3D Log Period CTA */
 .primary-cta-wrap {
   display: flex;
   justify-content: center;
+  margin-top: 2px;
 }
 
 .btn-log-period {
-  min-height: 46px;
-  padding: 0 28px;
+  min-height: 40px;
+  padding: 0 24px;
   border-radius: var(--radius-pill);
-  background: #D96B66;
+  background: var(--phase-menstrual);
   color: #FFFFFF;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
-  box-shadow: var(--shadow-card);
-  border: 1.5px solid transparent;
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: var(--shadow-btn-3d);
+}
+
+.btn-log-period:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
 }
 
 .btn-log-period.is-active {
   background: #FDECEC;
-  color: #9E3E3C;
-  border: 1.5px solid #E06D6B;
-  box-shadow: none;
+  color: #8C2D2B;
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: var(--shadow-btn-3d-sm);
 }
 
-/* Status Summary Cards */
-.status-cards {
+.btn-log-period.is-active:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
+}
+
+/* Bottom Anchor Card — Purin's Daily Check-In */
+.checkin-card {
+  width: 100%;
+  background: var(--bg-card);
+  border: 2px solid var(--ink-cocoa);
+  border-radius: var(--radius-card);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-info-card);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-.status-card,
-.card,
-.metric-card {
-  background: var(--bg-card);
-  border-radius: var(--radius-card);
-  padding: 16px 18px;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border-hairline);
-}
-
-.status-card-row {
+.checkin-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
-.status-card-title {
-  font-size: 15px;
-  font-weight: 700;
+.checkin-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.checkin-title {
+  font-size: 13.5px;
+  font-weight: 800;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
-.status-pill {
-  display: inline-flex;
-  align-items: center;
+.checkin-status {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.checkin-edit-btn {
+  flex-shrink: 0;
+}
+
+.checkin-chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 800;
 }
 
-.status-pill-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.status-pill--high {
-  background: var(--phase-fertile-tint);
-  color: var(--phase-ovulation);
-}
-
-.status-pill--low {
-  background: var(--bg-pill-soft);
-  color: var(--text-secondary);
-}
-
-.status-card-eyebrow {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.status-card-value {
-  margin-top: 4px;
-  font-size: 20px;
+.quick-chip {
+  min-height: 34px;
+  padding: 4px 4px;
+  border-radius: 11px;
+  background: var(--bg-card-white);
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: 0 2.5px 0 var(--ink-ledge-soft);
+  font-size: 11px;
   font-weight: 800;
   color: var(--text-primary);
+  line-height: 1.1;
+  text-align: center;
 }
 
-.status-card-sub {
-  margin-top: 2px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
+.quick-chip.is-selected {
+  background: var(--accent-custard);
+  box-shadow: 0 3px 0 var(--ink-cocoa);
+}
+
+.quick-chip:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
 }
 
 /* --------------------------------------------------------------------------
-   8. Calendar, Insights & Settings Shared Components
+   9. View B: Pompompurin Continuous Vertical Scrolling Calendar
    -------------------------------------------------------------------------- */
-.pill-btn {
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-pill-soft);
-  color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 800;
+.app-view--calendar {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.icon-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--bg-pill-soft);
-  color: var(--text-primary);
-  font-size: 22px;
+/* Unified Non-Shrinking Top Header Stack */
+.cal-sticky-top {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 20;
+  background: var(--bg-app);
+}
+
+/* Fixed Top Bar (48px) */
+.cal-topbar {
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--accent-custard);
+}
+
+.cal-active-month {
+  font-size: 20px;
   font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+/* Weekday Strip (32px) */
+.cal-weekdays-sticky {
+  height: 32px;
+  padding: 0 12px;
+  background: var(--bg-app);
+  border-bottom: 1px solid rgba(74, 50, 34, 0.08);
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  align-items: center;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+/* Slim Color Key Sub-Bar (28px) */
+.cal-legend-sticky {
+  height: 28px;
+  padding: 0 12px;
+  background: var(--bg-card);
+  border-bottom: 1px solid rgba(74, 50, 34, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* Sole Scrollable Month Grid Container */
+.cal-scroll-feed {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding-bottom: calc(105px + env(safe-area-inset-bottom));
+  position: relative;
+  scrollbar-width: none;
+}
+
+.cal-scroll-feed::-webkit-scrollbar {
+  display: none;
+}
+
+.cal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cal-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.calendar-nav {
+.cal-legend-swatch--logged {
+  background: var(--phase-menstrual);
+  border: 1.5px solid var(--ink-cocoa);
+}
+
+.cal-legend-swatch--predicted {
+  background: var(--phase-menstrual-tint);
+  border: 1.5px dashed var(--phase-menstrual);
+}
+
+.cal-legend-swatch--fertile {
+  background: var(--phase-fertile-tint);
+  border: 1px solid rgba(63, 122, 82, 0.35);
+}
+
+.cal-legend-swatch--ovulation {
+  background: var(--phase-ovulation);
+  border: 1.5px solid var(--ink-cocoa);
+}
+
+/* 11 Continuous Month Blocks (Full Scroll Clearance Behind Floating Dock) */
+.cal-months-list {
+  padding: 10px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cal-month-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Sanrio Ledger Month Divider Ribbon */
+.cal-month-divider {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
+  padding: 2px 2px 0;
 }
 
-.calendar-month-label {
-  font-size: 16px;
+.cal-month-name {
+  font-size: 14px;
   font-weight: 800;
+  color: var(--ink-cocoa);
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
 }
 
-.calendar-weekdays {
+.cal-month-dash {
+  flex: 1;
+  height: 0;
+  border-bottom: 1.5px dashed rgba(74, 50, 34, 0.22);
+  margin: 0 10px;
+}
+
+.cal-month-period-badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--phase-menstrual-tint);
+  border: 1.5px solid rgba(217, 107, 102, 0.45);
+  color: #8F3432;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.cal-month-period-badge--logged {
+  background: #FDECEC;
+  border-color: var(--ink-cocoa);
+  color: var(--ink-cocoa);
+}
+
+.cal-month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
+  gap: 5px;
 }
 
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+.cal-spacer {
+  min-height: 46px;
+  pointer-events: none;
 }
 
+/* Pressable Cream Pudding Day Tiles */
 .cal-cell {
-  min-height: 44px;
-  border-radius: 14px;
+  min-height: 46px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 800;
   color: var(--text-primary);
+  background: #FFFDF7;
+  border: 1px solid rgba(74, 50, 34, 0.14);
+  box-shadow: 0 2px 0 rgba(74, 50, 34, 0.08);
   position: relative;
+  overflow: visible;
+  padding-bottom: 4px;
 }
 
+.cal-cell:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.cal-cell-num {
+  line-height: 1;
+}
+
+/* Themed Phase Tiles */
 .cal-cell--logged_period {
   background: var(--phase-menstrual);
+  border: 1.5px solid var(--ink-cocoa);
+  box-shadow: 0 2px 0 var(--ink-cocoa);
   color: #FFFFFF;
 }
 
 .cal-cell--predicted_period {
   background: var(--phase-menstrual-tint);
   border: 1.5px dashed var(--phase-menstrual);
-  color: #9E3E3C;
+  box-shadow: none;
+  color: #8F3432;
 }
 
 .cal-cell--fertile {
   background: var(--phase-fertile-tint);
-  color: #3F7A52;
+  border: 1px solid rgba(63, 122, 82, 0.25);
+  box-shadow: 0 2px 0 rgba(63, 122, 82, 0.14);
+  color: var(--phase-fertile-text);
 }
 
 .cal-cell--ovulation {
-  background: var(--phase-ovulation-tint);
-  border: 2px solid var(--phase-ovulation);
-  color: #3F7A52;
-}
-
-.cal-cell--today {
-  box-shadow: inset 0 0 0 2px var(--text-primary);
-}
-
-.cal-cell--selected {
-  box-shadow: 0 0 0 2px var(--accent-custard-press);
-}
-
-.cal-cell--other-month {
-  color: rgba(74, 50, 34, 0.34);
-}
-
-/* High-contrast overflow dates when carrying a phase highlight */
-.cal-cell--other-month.cal-cell--fertile,
-.cal-cell--other-month.cal-cell--ovulation {
-  color: #3F7A52;
-}
-
-.cal-cell--other-month.cal-cell--predicted_period {
-  color: #9E3E3C;
-}
-
-.cal-cell--other-month.cal-cell--logged_period {
+  background: var(--phase-ovulation);
+  border: 1.5px solid var(--ink-cocoa);
+  box-shadow: 0 2px 0 var(--ink-cocoa);
   color: #FFFFFF;
 }
 
-/* Calendar Inline Legend & Selected Day Summary Card */
-.calendar-legend {
-  display: flex;
-  flex-wrap: wrap;
+/* "Today" Tile Wearing Pompompurin's Beret */
+.cal-cell--today {
+  z-index: 2;
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: 0 3px 0 var(--ink-cocoa);
+}
+
+.cal-cell--today:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink-cocoa);
+}
+
+.cal-today-beret {
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  width: 17px;
+  height: 12px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Tile Micro-Icons (Ovulation Custard Sparkle & Log Pudding Cup) */
+.cal-cell-markers {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 8px 14px;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.cal-marker-sparkle {
+  display: block;
+  width: 9px;
+  height: 9px;
+}
+
+.cal-marker-pudding {
+  display: block;
+  width: 10px;
+  height: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   10. View C (Insights) & View D (Settings) — Sanrio Ink-Outline Cards
+   -------------------------------------------------------------------------- */
+.card,
+.metric-card {
+  background: var(--bg-card);
+  border: 2px solid var(--ink-cocoa);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-info-card);
+}
+
+.card {
+  padding: 14px 16px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+/* Compact 2x2 Metric Cards with Top-Right Cocoa SVG Icon */
+.metric-card {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.metric-label {
   font-size: 12px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.metric-icon {
+  color: var(--ink-cocoa);
+  flex-shrink: 0;
+}
+
+.metric-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.metric-sub {
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-secondary);
 }
 
-.cal-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.pill-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card-white);
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: var(--shadow-btn-3d-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.cal-legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.pill-btn:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
 }
 
-.cal-legend-dot--logged {
-  background: var(--phase-menstrual);
+.card-heading {
+  font-size: 14.5px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: var(--text-primary);
 }
 
-.cal-legend-dot--predicted {
-  background: var(--phase-menstrual-tint);
-  border: 1.5px dashed var(--phase-menstrual);
-}
-
-.cal-legend-dot--fertile {
-  background: var(--phase-fertile-tint);
-  border: 1.5px solid var(--phase-fertile);
-}
-
-.cal-legend-dot--ovulation {
-  background: var(--phase-ovulation-tint);
-  border: 2px solid var(--phase-ovulation);
-}
-
-.day-summary-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.day-summary-header {
+.card-heading-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  margin-bottom: 10px;
 }
 
-.day-summary-date {
-  font-size: 15px;
+.card-heading--inline {
+  margin-bottom: 0;
+}
+
+.rhythm-total {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+/* Cycle Rhythm Breakdown Bar & Legend */
+.rhythm-bar {
+  width: 100%;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--ink-cocoa);
+  background: var(--bg-card-white);
+  overflow: hidden;
+  display: flex;
+}
+
+.rhythm-seg {
+  height: 100%;
+  transition: flex-grow 0.35s ease;
+}
+
+.rhythm-seg + .rhythm-seg {
+  border-left: 1.5px solid var(--ink-cocoa);
+}
+
+.rhythm-seg--menstrual  { background: var(--phase-menstrual); }
+.rhythm-seg--follicular { background: var(--accent-custard); }
+.rhythm-seg--ovulation  { background: var(--phase-ovulation); }
+.rhythm-seg--luteal     { background: var(--phase-luteal); }
+
+.rhythm-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+  margin-top: 10px;
+}
+
+.rhythm-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.rhythm-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-cocoa);
+  flex-shrink: 0;
+}
+
+.rhythm-dot--menstrual  { background: var(--phase-menstrual); }
+.rhythm-dot--follicular { background: var(--accent-custard); }
+.rhythm-dot--ovulation  { background: var(--phase-ovulation); }
+.rhythm-dot--luteal     { background: var(--phase-luteal); }
+
+.rhythm-name {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.rhythm-days {
+  margin-left: auto;
   font-weight: 800;
   color: var(--text-primary);
 }
 
-.day-summary-phase {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-
-.day-summary-edit-btn {
-  flex-shrink: 0;
-}
-
-.day-summary-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.day-summary-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.day-summary-tag {
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-pill-soft);
-  color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.day-summary-note {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.cal-cell-star {
-  position: absolute;
-  top: 2px;
-  right: 4px;
-  font-size: 9px;
-  line-height: 1;
-  color: var(--accent-custard-press);
-}
-
-.cal-cell-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--text-primary);
-  position: absolute;
-  bottom: 4px;
-  opacity: 0.65;
-}
-
-.cal-cell--logged_period .cal-cell-dot {
-  background: #FFFFFF;
-  opacity: 0.9;
-}
-
-/* Insights Bar Charts */
+/* Bar Charts */
 .cycles-chart,
 .symptoms-summary {
   display: flex;
@@ -1107,7 +1763,7 @@ textarea:focus-visible {
 .symptom-bar-row {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .cycle-bar-meta,
@@ -1115,16 +1771,17 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 800;
 }
 
 .cycle-bar-track,
 .symptom-bar-track {
   width: 100%;
-  height: 10px;
+  height: 12px;
   border-radius: var(--radius-pill);
-  background: var(--bg-pill-soft);
+  background: var(--bg-card-white);
+  border: 1.5px solid var(--ink-cocoa);
   overflow: hidden;
 }
 
@@ -1152,8 +1809,9 @@ textarea:focus-visible {
   padding: 1px 7px;
   border-radius: var(--radius-pill);
   background: var(--phase-luteal-tint);
-  color: var(--phase-luteal);
-  font-size: 11px;
+  border: 1.5px solid var(--ink-cocoa);
+  color: var(--text-primary);
+  font-size: 10.5px;
   font-weight: 800;
 }
 
@@ -1163,12 +1821,429 @@ textarea:focus-visible {
   padding: 1px 7px;
   border-radius: var(--radius-pill);
   background: var(--phase-fertile-tint);
-  color: var(--phase-ovulation);
-  font-size: 11px;
+  border: 1.5px solid var(--ink-cocoa);
+  color: var(--phase-fertile-text);
+  font-size: 10.5px;
   font-weight: 800;
 }
 
-/* Modal Dialog */
+.empty-hint {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+/* Settings Rows & Pressable 3D Controls */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.toggle-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card-white);
+  border: 2px solid var(--ink-cocoa);
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ink-cocoa);
+  transition: transform 0.22s var(--spring-bounce);
+}
+
+.toggle-switch:checked {
+  background: var(--accent-custard);
+}
+
+.toggle-switch:checked::after {
+  transform: translateX(20px);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepper-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg-card-white);
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: 0 2.5px 0 var(--ink-cocoa);
+  font-size: 18px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-btn:active {
+  transform: translateY(2px);
+  box-shadow: var(--shadow-btn-press);
+}
+
+.stepper-val {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-secondary,
+.btn-danger,
+.btn-primary-full {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 14px;
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: var(--shadow-btn-3d);
+  font-size: 14px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-secondary:active,
+.btn-danger:active,
+.btn-primary-full:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
+}
+
+.btn-secondary {
+  background: var(--bg-card-white);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background: var(--phase-menstrual-tint);
+  color: var(--phase-menstrual-text);
+}
+
+.btn-primary-full {
+  background: var(--accent-custard);
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+/* --------------------------------------------------------------------------
+   11. Floating Bottom Navigation Dock with Sliding Pill Indicator
+   -------------------------------------------------------------------------- */
+.bottom-dock-wrap {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.dock-pill,
+.dock-fab {
+  pointer-events: auto;
+  box-shadow: var(--shadow-dock);
+}
+
+.dock-pill {
+  position: relative;
+  flex: 1;
+  background: var(--dock-cocoa);
+  border: 2px solid var(--ink-cocoa);
+  border-radius: var(--radius-pill);
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.dock-indicator {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  height: 42px;
+  width: 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent-custard);
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform, width;
+  transition:
+    transform 0.34s var(--spring-bounce),
+    width 0.3s var(--spring-bounce);
+}
+
+.dock-tab {
+  position: relative;
+  z-index: 1;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 11px;
+  border-radius: var(--radius-pill);
+  color: rgba(255, 253, 245, 0.78);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  transition:
+    transform 0.22s var(--spring-bounce),
+    color 0.2s ease;
+}
+
+.dock-tab svg {
+  flex-shrink: 0;
+  transition: transform 0.28s var(--spring-bounce);
+}
+
+.dock-tab-label {
+  display: none;
+}
+
+.dock-tab--active {
+  color: var(--text-primary);
+  padding: 0 15px;
+}
+
+.dock-tab--active .dock-tab-label {
+  display: inline;
+}
+
+.dock-tab--active svg {
+  transform: translateY(-2px) scale(1.08);
+}
+
+.dock-fab {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-custard);
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: var(--shadow-btn-3d);
+  color: var(--ink-cocoa);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dock-fab:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
+}
+
+.dock-fab svg {
+  transition: transform 0.28s var(--spring-bounce);
+}
+
+.dock-fab:active svg,
+.dock-fab.is-open svg {
+  transform: rotate(45deg);
+}
+
+/* --------------------------------------------------------------------------
+   12. Layer 4: Slide-Up Daily Log Drawer
+   -------------------------------------------------------------------------- */
+.drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  background: rgba(74, 50, 34, 0.36);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.drawer-backdrop.is-open {
+  opacity: 1;
+}
+
+.log-drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  max-height: 86%;
+  background: var(--bg-app);
+  border-top: 2.5px solid var(--ink-cocoa);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -12px 36px rgba(74, 50, 34, 0.18);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  visibility: hidden;
+  transition: transform 0.34s var(--ease-sheet), visibility 0.34s ease;
+  padding-bottom: env(safe-area-inset-bottom);
+  will-change: transform;
+}
+
+.log-drawer.is-open {
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.drawer-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(74, 50, 34, 0.24);
+  margin: 10px auto 4px;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px 12px;
+  border-bottom: 1.5px solid rgba(74, 50, 34, 0.1);
+}
+
+.drawer-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.drawer-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.segmented-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  background: var(--bg-card);
+  border: 2px solid var(--ink-cocoa);
+  padding: 4px;
+  border-radius: 14px;
+}
+
+.seg-btn {
+  min-height: 36px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.seg-btn--active {
+  background: var(--accent-custard);
+  color: var(--text-primary);
+  border: 1.5px solid var(--ink-cocoa);
+  box-shadow: 0 2px 0 var(--ink-cocoa);
+}
+
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-btn {
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card-white);
+  border: 2px solid var(--ink-cocoa);
+  box-shadow: 0 2.5px 0 var(--ink-ledge-soft);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.chip-btn.is-selected {
+  background: var(--accent-custard);
+  box-shadow: 0 3px 0 var(--ink-cocoa);
+}
+
+.chip-btn:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-btn-press);
+}
+
+.drawer-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.biomarkers-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.sub-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.note-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--ink-cocoa);
+  background: var(--bg-card-white);
+  font-size: 14px;
+  font-weight: 600;
+  resize: vertical;
+}
+
+.drawer-footer {
+  padding: 12px 20px 16px;
+  border-top: 1.5px solid rgba(74, 50, 34, 0.1);
+}
+
+/* Modal Dialog & Toast */
 .modal-backdrop {
   position: absolute;
   inset: 0;
@@ -1185,11 +2260,11 @@ textarea:focus-visible {
 .modal-card {
   width: 100%;
   max-width: 340px;
-  background: var(--bg-app);
-  border-radius: 24px;
+  background: var(--bg-card);
+  border-radius: 22px;
   padding: 20px;
-  box-shadow: var(--shadow-shell);
-  border: 1px solid var(--border-hairline);
+  box-shadow: 0 5px 0 var(--ink-cocoa);
+  border: 2.5px solid var(--ink-cocoa);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1231,434 +2306,147 @@ textarea:focus-visible {
   color: #FFFFFF;
 }
 
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.metric-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.metric-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.metric-value {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.metric-sub {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.card-heading {
-  font-size: 15px;
-  font-weight: 800;
-  margin-bottom: 12px;
-}
-
-.empty-hint {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.toggle-switch {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 48px;
-  height: 28px;
-  border-radius: var(--radius-pill);
-  background: rgba(74, 50, 34, 0.16);
-  position: relative;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  flex-shrink: 0;
-}
-
-.toggle-switch::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--bg-card);
-  box-shadow: 0 2px 6px rgba(74, 50, 34, 0.2);
-  transition: transform 0.2s var(--spring-bounce);
-}
-
-.toggle-switch:checked {
-  background: var(--accent-custard);
-}
-
-.toggle-switch:checked::after {
-  transform: translateX(20px);
-}
-
-.stepper {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.stepper-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--bg-pill-soft);
-  font-size: 18px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stepper-val {
-  min-width: 24px;
-  text-align: center;
-  font-weight: 800;
-}
-
-.settings-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.btn-secondary,
-.btn-danger,
-.btn-primary-full {
-  width: 100%;
-  min-height: 46px;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-secondary {
-  background: var(--bg-pill-soft);
-  color: var(--text-primary);
-}
-
-.btn-danger {
-  background: var(--phase-menstrual-tint);
-  color: var(--phase-menstrual);
-}
-
-.btn-primary-full {
-  background: var(--accent-custard);
-  color: var(--text-primary);
-  font-size: 15px;
-}
-
-.btn-primary-full:active {
-  background: var(--accent-custard-press);
-}
-
-/* --------------------------------------------------------------------------
-   9. Floating Bottom Navigation Dock
-   -------------------------------------------------------------------------- */
-.bottom-dock-wrap {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  pointer-events: none;
-}
-
-.dock-pill,
-.dock-fab {
-  pointer-events: auto;
-  box-shadow: var(--shadow-dock);
-}
-
-.dock-pill {
-  flex: 1;
-  background: var(--dock-cocoa);
-  border-radius: var(--radius-pill);
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-}
-
-.dock-tab {
-  min-width: 44px;
-  height: 44px;
-  padding: 0 12px;
-  border-radius: var(--radius-pill);
-  color: rgba(255, 253, 245, 0.72);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.dock-tab-label {
-  display: none;
-}
-
-.dock-tab--active {
-  background: var(--accent-custard);
-  color: var(--text-primary);
-  padding: 0 16px;
-}
-
-.dock-tab--active .dock-tab-label {
-  display: inline;
-}
-
-.dock-fab {
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--dock-cocoa);
-  color: #FFFDF5;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* --------------------------------------------------------------------------
-   10. Layer 4: Slide-Up Daily Log Drawer
-   -------------------------------------------------------------------------- */
-.drawer-backdrop {
-  position: absolute;
-  inset: 0;
-  z-index: 70;
-  background: rgba(74, 50, 34, 0.35);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.drawer-backdrop.is-open {
-  opacity: 1;
-}
-
-.log-drawer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 80;
-  max-height: 86%;
-  background: var(--bg-app);
-  border-radius: 28px 28px 0 0;
-  box-shadow: 0 -12px 36px rgba(74, 50, 34, 0.16);
-  display: flex;
-  flex-direction: column;
-  transform: translateY(100%);
-  visibility: hidden;
-  transition: transform 0.32s var(--ease-sheet), visibility 0.32s ease;
-  padding-bottom: env(safe-area-inset-bottom);
-  will-change: transform;
-}
-
-.log-drawer.is-open {
-  transform: translateY(0);
-  visibility: visible;
-}
-
-.drawer-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(74, 50, 34, 0.18);
-  margin: 10px auto 4px;
-}
-
-.drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 20px 12px;
-  border-bottom: 1px solid var(--border-hairline);
-}
-
-.drawer-title {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.drawer-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.drawer-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.segmented-bar {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  background: var(--bg-pill-soft);
-  padding: 4px;
-  border-radius: 16px;
-}
-
-.seg-btn {
-  min-height: 38px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-secondary);
-}
-
-.seg-btn--active {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(74, 50, 34, 0.1);
-}
-
-.chip-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chip-btn {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-hairline);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.chip-btn.is-selected {
-  background: var(--accent-custard);
-  border-color: var(--accent-custard-press);
-}
-
-.drawer-summary {
-  cursor: pointer;
-  list-style: none;
-}
-
-.biomarkers-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.sub-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-
-.note-input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1.5px solid var(--border-hairline);
-  background: var(--bg-card);
-  font-size: 14px;
-  font-weight: 600;
-  resize: vertical;
-}
-
-.drawer-footer {
-  padding: 12px 20px 16px;
-  border-top: 1px solid var(--border-hairline);
-}
-
-/* Toast Notification */
 .toast {
   position: absolute;
   left: 50%;
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  bottom: calc(84px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 95;
   background: var(--dock-cocoa);
+  border: 2px solid var(--accent-custard);
   color: #FFFDF5;
-  padding: 10px 18px;
+  padding: 9px 18px;
   border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 800;
   box-shadow: var(--shadow-dock);
   white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
-   11. Keyframes & Reduced Motion
+   13. Keyframes (Custard Pudding Jelly Physics) & Reduced Motion
    -------------------------------------------------------------------------- */
-@keyframes splash-spring-up {
-  0%   { opacity: 0; transform: translateY(40px) scale(0.8); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes jellyPop {
+  0%   { transform: scale(1, 1); }
+  35%  { transform: scale(1.08, 0.92); }
+  65%  { transform: scale(0.95, 1.05); }
+  100% { transform: scale(1, 1); }
 }
 
-@keyframes splash-wiggle {
+@keyframes splash-stamp-spin {
   0%   { transform: rotate(0deg); }
-  30%  { transform: rotate(-4deg); }
-  65%  { transform: rotate(4deg); }
-  100% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-@keyframes fade-in-up {
-  0%   { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
+@keyframes splash-pudding-act1 {
+  0%   { opacity: 0; transform: translateY(-40px) scale(0.92, 1.08); }
+  22%  { opacity: 1; transform: translateY(0) scale(1.12, 0.88); }
+  36%  { opacity: 1; transform: translateY(-4px) scale(0.96, 1.04); }
+  48%  { opacity: 1; transform: translateY(0) skewX(-7deg) scaleY(0.92); }
+  66%  { opacity: 1; transform: translateY(0) skewX(6deg) scaleY(1.04); }
+  84%  { opacity: 1; transform: translateY(0) skewX(-3deg) scaleY(0.97); }
+  100% { opacity: 1; transform: translateY(0) skewX(0deg) scale(1, 1); }
 }
 
-@keyframes sparkle-pop {
-  0%   { opacity: 0; transform: scale(0.5); }
-  50%  { opacity: 1; transform: scale(1.15); }
-  100% { opacity: 0.85; transform: scale(1); }
+@keyframes splash-pudding-pop-out {
+  0%   { opacity: 1; transform: scale(1, 1); }
+  55%  { opacity: 0.85; transform: scale(1.32, 0.52); }
+  100% { opacity: 0; transform: scale(1.38, 0.42); }
+}
+
+@keyframes splash-purin-pop {
+  0%   { opacity: 0; transform: scale(0.25); }
+  45%  { opacity: 1; transform: scale(1.12, 0.90); }
+  75%  { opacity: 1; transform: scale(0.96, 1.04); }
+  100% { opacity: 1; transform: scale(1, 1); }
+}
+
+@keyframes splash-double-wave {
+  0%   { transform: rotate(0deg) translateY(0); }
+  18%  { transform: rotate(-3deg) translateY(-5px); }
+  38%  { transform: rotate(4deg) translateY(-2px); }
+  56%  { transform: rotate(-3deg) translateY(-5px); }
+  76%  { transform: rotate(4deg) translateY(-2px); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+
+@keyframes splash-motif-burst {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.2) rotate(-20deg); }
+  65%  { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1.1) rotate(6deg); }
+  100% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1) rotate(0deg); }
+}
+
+@keyframes splash-orbit-float {
+  0%   { transform: translateY(0) rotate(-4deg); }
+  100% { transform: translateY(-7px) rotate(4deg); }
+}
+
+@keyframes splash-paw-bob-1 {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.5); }
+  16%  { opacity: 1; transform: translateY(0) scale(1); }
+  45%  { opacity: 1; transform: translateY(-7px) rotate(-8deg) scale(1.06); }
+  78%  { opacity: 1; transform: translateY(-2px) rotate(6deg) scale(1); }
+  100% { opacity: 0; transform: translateY(-12px) scale(0.85); }
+}
+
+@keyframes splash-paw-bob-2 {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.5); }
+  18%  { opacity: 1; transform: translateY(-2px) scale(1); }
+  50%  { opacity: 1; transform: translateY(-9px) rotate(10deg) scale(1.08); }
+  80%  { opacity: 1; transform: translateY(-3px) rotate(-6deg) scale(1); }
+  100% { opacity: 0; transform: translateY(-14px) scale(0.85); }
+}
+
+@keyframes splash-bubble-pop {
+  0%   { opacity: 0; transform: scale(0.55) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes splash-word-purin-pop {
+  0%   { opacity: 0; transform: rotate(-3deg) scale(0.55); }
+  45%  { opacity: 1; transform: rotate(-3deg) scale(1.12, 0.88); }
+  75%  { opacity: 1; transform: rotate(-3deg) scale(0.95, 1.05); }
+  100% { opacity: 1; transform: rotate(-3deg) scale(1, 1); }
+}
+
+@keyframes splash-word-cycle-pop {
+  0%   { opacity: 0; transform: rotate(2deg) scale(0.55); }
+  45%  { opacity: 1; transform: rotate(2deg) scale(1.12, 0.88); }
+  75%  { opacity: 1; transform: rotate(2deg) scale(0.95, 1.05); }
+  100% { opacity: 1; transform: rotate(2deg) scale(1, 1); }
+}
+
+@keyframes splash-beret-wiggle {
+  0%   { transform: rotate(-12deg); }
+  35%  { transform: rotate(-18deg); }
+  70%  { transform: rotate(-6deg); }
+  100% { transform: rotate(-12deg); }
+}
+
+@keyframes splash-shadow-pulse {
+  0%   { opacity: 0; transform: scale(0.45); }
+  16%  { opacity: 1; transform: scale(1.12); }
+  35%  { opacity: 0.9; transform: scale(0.95); }
+  52%  { opacity: 1; transform: scale(1.08); }
+  68%  { opacity: 0.85; transform: scale(1.16); }
+  84%  { opacity: 1; transform: scale(0.94); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splash-stage-exit {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-16px); }
 }
 
 @keyframes mascot-breathe {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-4px); }
+}
+
+@keyframes cell-select-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
 }
 
 @keyframes pin-shake {
@@ -1676,5 +2464,6 @@ textarea:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
