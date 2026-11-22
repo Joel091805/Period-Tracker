@@ -18,7 +18,11 @@ export const DB_VERSION = 1;
 export const META_STORE = 'app_meta';
 export const VAULT_STORE = 'encrypted_vault';
 export const VAULT_CONFIG_KEY = 'vault_config';
+export const DEVICE_KEY_KEY = 'device_key';
 export const MAIN_VAULT_KEY = 'main_vault';
+
+const VAULT_MODE_DEVICE = 'device';
+const VAULT_MODE_PIN = 'pin';
 
 export const VAULT_SCHEMA_VERSION = 1;
 export const PIN_LENGTH = 6;
@@ -49,6 +53,9 @@ let activeCryptoKey = null;
 
 /** @type {object | null} */
 let activeVaultState = null;
+
+/** @type {'device' | 'pin' | null} */
+let activeVaultMode = null;
 
 /** @type {IDBDatabase | null} */
 let openDbInstance = null;
@@ -319,6 +326,21 @@ function generateRandomBytes(length) {
 }
 
 /**
+ * Generates a non-extractable 256-bit AES-GCM CryptoKey for automatic device-mode encryption.
+ */
+async function generateDeviceKey() {
+    assertCryptoAvailable();
+    return globalThis.crypto.subtle.generateKey(
+        {
+            name: 'AES-GCM',
+            length: AES_KEY_BIT_LENGTH,
+        },
+        false,
+        ['encrypt', 'decrypt']
+    );
+}
+
+/**
  * Derives a non-extractable 256-bit AES-GCM CryptoKey from a secret string and salt.
  */
 async function deriveAesKey(secret, salt, iterations = PBKDF2_ITERATIONS) {
@@ -507,14 +529,24 @@ async function idbPut(storeName, key, value) {
 }
 
 /**
- * Atomically writes both `vault_config` (`app_meta`) and `main_vault` (`encrypted_vault`)
- * inside a single multi-store readwrite transaction so they can never diverge.
+ * Atomically writes `vault_config` (`app_meta`), optional `device_key`, and `main_vault`
+ * (`encrypted_vault`) inside a single multi-store readwrite transaction so they can never diverge.
  */
-async function idbPutMetaAndVaultAtomic(metaRecord, vaultRecord) {
+async function idbPutMetaAndVaultAtomic(
+    metaRecord,
+    vaultRecord,
+    { deviceKey = null, deleteDeviceKey = false } = {}
+) {
     const db = await openVaultDb();
     return new Promise((resolve, reject) => {
         const tx = db.transaction([META_STORE, VAULT_STORE], 'readwrite');
-        tx.objectStore(META_STORE).put(metaRecord, VAULT_CONFIG_KEY);
+        const metaStore = tx.objectStore(META_STORE);
+        metaStore.put(metaRecord, VAULT_CONFIG_KEY);
+        if (deviceKey) {
+            metaStore.put(deviceKey, DEVICE_KEY_KEY);
+        } else if (deleteDeviceKey) {
+            metaStore.delete(DEVICE_KEY_KEY);
+        }
         tx.objectStore(VAULT_STORE).put(vaultRecord, MAIN_VAULT_KEY);
 
         tx.oncomplete = () => resolve();
@@ -574,18 +606,163 @@ async function verifyPinAgainstConfig(pin, config) {
 // Public Module API
 // ---------------------------------------------------------------------------
 
-/**
- * Checks whether a vault has been initialized in IndexedDB (`app_meta` -> `vault_config`).
- * @returns {Promise<boolean>}
- */
-export async function hasExistingVault() {
-    const config = await idbGet(META_STORE, VAULT_CONFIG_KEY);
+function isPinConfig(config) {
     return Boolean(
         config &&
+            config.mode !== VAULT_MODE_DEVICE &&
             config.salt &&
             config.verifierIv &&
             config.verifierCiphertext
     );
+}
+
+/**
+ * Checks whether a vault has been initialized in IndexedDB (`app_meta` -> `vault_config`)
+ * in either `'device'` or `'pin'` mode, and refreshes the cached vault mode.
+ * @returns {Promise<boolean>}
+ */
+export async function hasExistingVault() {
+    const config = await idbGet(META_STORE, VAULT_CONFIG_KEY);
+    if (!config) {
+        activeVaultMode = null;
+        return false;
+    }
+
+    if (config.mode === VAULT_MODE_DEVICE) {
+        const deviceKey = await idbGet(META_STORE, DEVICE_KEY_KEY);
+        if (deviceKey) {
+            activeVaultMode = VAULT_MODE_DEVICE;
+            return true;
+        }
+        activeVaultMode = null;
+        return false;
+    }
+
+    if (isPinConfig(config)) {
+        activeVaultMode = VAULT_MODE_PIN;
+        return true;
+    }
+
+    activeVaultMode = null;
+    return false;
+}
+
+/**
+ * Returns true only when the stored vault metadata is in `'pin'` mode, and false otherwise.
+ * @returns {boolean}
+ */
+export function isPinLockEnabled() {
+    return activeVaultMode === VAULT_MODE_PIN;
+}
+
+/**
+ * Creates a new encrypted vault protected by an automatic non-extractable device CryptoKey,
+ * persists the metadata, key, and encrypted initial state atomically to IndexedDB, and unlocks
+ * the session in RAM with zero PIN friction.
+ *
+ * @param {object} [initialState] - Optional initial vault state (defaults to empty schema).
+ * @returns {Promise<object>} Deep-cloned initial vault state.
+ */
+export async function createDeviceVault(initialState) {
+    const normalizedState =
+        initialState === undefined
+            ? createEmptyVaultState()
+            : normalizeVaultState(initialState);
+    const startEpoch = sessionEpoch;
+
+    return enqueueWrite(async () => {
+        if (startEpoch !== sessionEpoch) {
+            throw new Error('Vault creation aborted because the session was locked or wiped.');
+        }
+
+        const exists = await hasExistingVault();
+        if (exists) {
+            throw new Error('A vault already exists. Unlock it or wipe it before creating a new vault.');
+        }
+
+        const deviceKey = await generateDeviceKey();
+        const vaultEncrypted = await encryptJsonPayload(deviceKey, normalizedState);
+
+        if (startEpoch !== sessionEpoch) {
+            throw new Error('Vault creation aborted because the session was locked or wiped.');
+        }
+
+        const nowIso = new Date().toISOString();
+        const metaRecord = {
+            mode: VAULT_MODE_DEVICE,
+            updatedAt: nowIso,
+        };
+        const vaultRecord = {
+            iv: vaultEncrypted.iv,
+            ciphertext: vaultEncrypted.ciphertext,
+            schemaVersion: VAULT_SCHEMA_VERSION,
+            updatedAt: nowIso,
+        };
+
+        await idbPutMetaAndVaultAtomic(metaRecord, vaultRecord, { deviceKey });
+
+        if (startEpoch !== sessionEpoch) {
+            throw new Error('Vault was locked or wiped while finalizing creation.');
+        }
+
+        activeCryptoKey = deviceKey;
+        activeVaultState = normalizedState;
+        activeVaultMode = VAULT_MODE_DEVICE;
+        return deepClone(activeVaultState);
+    });
+}
+
+/**
+ * Unlocks an existing `'device'`-mode vault automatically using the stored non-extractable
+ * device CryptoKey.
+ *
+ * @returns {Promise<object>} Deep-cloned decrypted vault state.
+ */
+export async function unlockDeviceVault() {
+    const startEpoch = sessionEpoch;
+    const config = await idbGet(META_STORE, VAULT_CONFIG_KEY);
+    if (!config) {
+        activeVaultMode = null;
+        throw new Error('No existing vault found.');
+    }
+    if (config.mode !== VAULT_MODE_DEVICE) {
+        if (isPinConfig(config)) {
+            activeVaultMode = VAULT_MODE_PIN;
+        }
+        throw new Error('Vault requires a 6-digit PIN to unlock.');
+    }
+
+    const deviceKey = await idbGet(META_STORE, DEVICE_KEY_KEY);
+    if (!deviceKey) {
+        throw new Error('Device encryption key is missing or corrupted.');
+    }
+
+    const vaultRecord = await idbGet(VAULT_STORE, MAIN_VAULT_KEY);
+    if (!vaultRecord || !vaultRecord.iv || !vaultRecord.ciphertext) {
+        throw new Error('Encrypted vault payload is missing or corrupted.');
+    }
+
+    let decryptedState;
+    try {
+        decryptedState = await decryptJsonPayload(
+            deviceKey,
+            vaultRecord.iv,
+            vaultRecord.ciphertext
+        );
+    } catch {
+        throw new Error('Failed to decrypt device vault payload.');
+    }
+
+    const normalizedState = normalizeVaultState(decryptedState, { strict: true });
+
+    if (startEpoch !== sessionEpoch) {
+        throw new Error('Vault unlock aborted because the session was locked or wiped.');
+    }
+
+    activeCryptoKey = deviceKey;
+    activeVaultState = normalizedState;
+    activeVaultMode = VAULT_MODE_DEVICE;
+    return deepClone(activeVaultState);
 }
 
 /**
@@ -626,6 +803,7 @@ export async function createVault(pin, initialState) {
 
         const nowIso = new Date().toISOString();
         const metaRecord = {
+            mode: VAULT_MODE_PIN,
             salt,
             verifierIv: verifierEncrypted.iv,
             verifierCiphertext: verifierEncrypted.ciphertext,
@@ -639,7 +817,7 @@ export async function createVault(pin, initialState) {
             updatedAt: nowIso,
         };
 
-        await idbPutMetaAndVaultAtomic(metaRecord, vaultRecord);
+        await idbPutMetaAndVaultAtomic(metaRecord, vaultRecord, { deleteDeviceKey: true });
 
         if (startEpoch !== sessionEpoch) {
             throw new Error('Vault was locked or wiped while finalizing creation.');
@@ -647,6 +825,7 @@ export async function createVault(pin, initialState) {
 
         activeCryptoKey = derivedKey;
         activeVaultState = normalizedState;
+        activeVaultMode = VAULT_MODE_PIN;
         return deepClone(activeVaultState);
     });
 }
@@ -664,7 +843,12 @@ export async function unlockVault(pin) {
     const startEpoch = sessionEpoch;
     const config = await idbGet(META_STORE, VAULT_CONFIG_KEY);
     if (!config) {
+        activeVaultMode = null;
         throw new Error('No existing vault found.');
+    }
+    if (config.mode === VAULT_MODE_DEVICE) {
+        activeVaultMode = VAULT_MODE_DEVICE;
+        throw new Error('Vault is in device mode and does not require a PIN.');
     }
 
     const candidateKey = await verifyPinAgainstConfig(pin, config);
@@ -693,6 +877,7 @@ export async function unlockVault(pin) {
 
     activeCryptoKey = candidateKey;
     activeVaultState = normalizedState;
+    activeVaultMode = VAULT_MODE_PIN;
     return deepClone(activeVaultState);
 }
 
@@ -780,6 +965,142 @@ export async function commitVaultState(updaterFn) {
 }
 
 /**
+ * Upgrades the active unlocked vault from `'device'` mode to `'pin'` mode:
+ * validates `newPin`, derives a PBKDF2 AES-GCM key, re-encrypts the in-memory state,
+ * saves `'pin'` metadata, and deletes the stored device CryptoKey atomically.
+ *
+ * @param {string} newPin - 6-digit numeric PIN string.
+ * @returns {Promise<void>}
+ */
+export async function enablePinLock(newPin) {
+    assertValidPin(newPin, 'New PIN');
+    if (!isVaultUnlocked()) {
+        throw new Error('Vault is locked. Unlock the vault before enabling PIN lock.');
+    }
+
+    const startEpoch = sessionEpoch;
+
+    return enqueueWrite(async () => {
+        if (startEpoch !== sessionEpoch || !isVaultUnlocked()) {
+            throw new Error('Enabling PIN lock aborted because the session was locked or wiped.');
+        }
+
+        const stateToReencrypt = deepClone(activeVaultState);
+        const newSalt = generateRandomBytes(SALT_BYTE_LENGTH);
+        const newKey = await deriveAesKey(newPin, newSalt, PBKDF2_ITERATIONS);
+
+        const newVerifier = await encryptJsonPayload(newKey, VERIFIER_PAYLOAD);
+        const newVault = await encryptJsonPayload(newKey, stateToReencrypt);
+
+        if (startEpoch !== sessionEpoch || !isVaultUnlocked()) {
+            throw new Error('Enabling PIN lock aborted because the session was locked or wiped.');
+        }
+
+        const nowIso = new Date().toISOString();
+        const nextMetaRecord = {
+            mode: VAULT_MODE_PIN,
+            salt: newSalt,
+            verifierIv: newVerifier.iv,
+            verifierCiphertext: newVerifier.ciphertext,
+            iterations: PBKDF2_ITERATIONS,
+            updatedAt: nowIso,
+        };
+        const nextVaultRecord = {
+            iv: newVault.iv,
+            ciphertext: newVault.ciphertext,
+            schemaVersion: VAULT_SCHEMA_VERSION,
+            updatedAt: nowIso,
+        };
+
+        await idbPutMetaAndVaultAtomic(nextMetaRecord, nextVaultRecord, {
+            deleteDeviceKey: true,
+        });
+
+        if (startEpoch !== sessionEpoch) {
+            throw new Error('Vault was locked or wiped while enabling PIN lock.');
+        }
+
+        activeCryptoKey = newKey;
+        activeVaultState = stateToReencrypt;
+        activeVaultMode = VAULT_MODE_PIN;
+    });
+}
+
+/**
+ * Transitions a `'pin'`-protected vault back to `'device'` mode: verifies `currentPin`,
+ * generates a fresh non-extractable device CryptoKey, re-encrypts the current vault state
+ * under it, and updates metadata to `'device'` mode atomically.
+ *
+ * @param {string} currentPin - Current 6-digit numeric PIN string.
+ * @returns {Promise<void>}
+ */
+export async function disablePinLock(currentPin) {
+    assertValidPin(currentPin, 'Current PIN');
+
+    const startEpoch = sessionEpoch;
+    const wasUnlocked = isVaultUnlocked();
+
+    return enqueueWrite(async () => {
+        if (startEpoch !== sessionEpoch) {
+            throw new Error('Disabling PIN lock aborted because the session was locked or wiped.');
+        }
+
+        const config = await idbGet(META_STORE, VAULT_CONFIG_KEY);
+        if (!config) {
+            throw new Error('No existing vault found.');
+        }
+        if (!isPinConfig(config)) {
+            throw new Error('PIN lock is not currently enabled.');
+        }
+
+        const verifiedCurrentKey = await verifyPinAgainstConfig(currentPin, config);
+
+        let stateToReencrypt;
+        if (wasUnlocked && startEpoch === sessionEpoch) {
+            stateToReencrypt = deepClone(activeVaultState);
+        } else {
+            const vaultRecord = await idbGet(VAULT_STORE, MAIN_VAULT_KEY);
+            if (!vaultRecord || !vaultRecord.iv || !vaultRecord.ciphertext) {
+                throw new Error('Encrypted vault payload is missing or corrupted.');
+            }
+            const decrypted = await decryptJsonPayload(
+                verifiedCurrentKey,
+                vaultRecord.iv,
+                vaultRecord.ciphertext
+            );
+            stateToReencrypt = normalizeVaultState(decrypted, { strict: true });
+        }
+
+        const deviceKey = await generateDeviceKey();
+        const newVault = await encryptJsonPayload(deviceKey, stateToReencrypt);
+
+        if (startEpoch !== sessionEpoch) {
+            throw new Error('Disabling PIN lock aborted because the session was locked or wiped.');
+        }
+
+        const nowIso = new Date().toISOString();
+        const nextMetaRecord = {
+            mode: VAULT_MODE_DEVICE,
+            updatedAt: nowIso,
+        };
+        const nextVaultRecord = {
+            iv: newVault.iv,
+            ciphertext: newVault.ciphertext,
+            schemaVersion: VAULT_SCHEMA_VERSION,
+            updatedAt: nowIso,
+        };
+
+        await idbPutMetaAndVaultAtomic(nextMetaRecord, nextVaultRecord, { deviceKey });
+
+        activeVaultMode = VAULT_MODE_DEVICE;
+        if (wasUnlocked && startEpoch === sessionEpoch) {
+            activeCryptoKey = deviceKey;
+            activeVaultState = stateToReencrypt;
+        }
+    });
+}
+
+/**
  * Verifies the current 6-digit PIN and atomically re-encrypts the vault and verifier
  * under a newly generated 16-byte salt and key derived from the new 6-digit PIN.
  *
@@ -834,6 +1155,7 @@ export async function changeVaultPin(currentPin, newPin) {
 
         const nowIso = new Date().toISOString();
         const nextMetaRecord = {
+            mode: VAULT_MODE_PIN,
             salt: newSalt,
             verifierIv: newVerifier.iv,
             verifierCiphertext: newVerifier.ciphertext,
@@ -847,8 +1169,11 @@ export async function changeVaultPin(currentPin, newPin) {
             updatedAt: nowIso,
         };
 
-        await idbPutMetaAndVaultAtomic(nextMetaRecord, nextVaultRecord);
+        await idbPutMetaAndVaultAtomic(nextMetaRecord, nextVaultRecord, {
+            deleteDeviceKey: true,
+        });
 
+        activeVaultMode = VAULT_MODE_PIN;
         // Preserve lock state: only update RAM key if the vault was unlocked before and still unlocked.
         if (wasUnlocked && startEpoch === sessionEpoch) {
             activeCryptoKey = newKey;
@@ -973,5 +1298,7 @@ export async function importEncryptedBackup(backupJsonString, backupPassphrase) 
  */
 export async function panicWipeVault() {
     lockVault();
+    activeVaultMode = null;
     await idbDeleteDatabase();
+    activeVaultMode = null;
 }

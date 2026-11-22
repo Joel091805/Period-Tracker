@@ -756,75 +756,104 @@ textarea:focus-visible {
   display: none;
 }
 
-/* Caramel-Scalloped Custard Header Accent */
-.custard-header-wrap {
+/* Unified Notch-Safe Caramel-Scalloped Custard Header (All 4 Tabs) */
+.tab-header-wrap {
   flex-shrink: 0;
   width: 100%;
-  background: var(--accent-custard);
-  padding-top: env(safe-area-inset-top);
+  background-color: #F7D358;
   position: relative;
+  z-index: 25;
 }
 
-.custard-scallop {
+.tab-header {
+  background-color: #F7D358;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 25;
+  padding: calc(14px + env(safe-area-inset-top)) 18px 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tab-header-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.tab-header-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #4A3222;
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.tab-header-subtitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(74, 50, 34, 0.78);
+  line-height: 1.25;
+  margin: 2px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-header-scallop {
   display: block;
   width: 100%;
-  height: 16px;
+  height: 14px;
   background: var(--bg-app);
   margin-bottom: -1px;
 }
 
-.custard-header-wrap--compact .custard-scallop {
-  height: 14px;
-}
-
-.top-header,
-.view-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 46px;
-  padding: 8px 16px 4px;
-  background: var(--accent-custard);
-}
-
-.top-header--compact {
-  min-height: 44px;
-  padding: 6px 16px 2px;
-}
-
-.greeting-title,
-.view-title {
-  font-size: 20px;
+.tab-header-btn {
+  background: #FFFDF5;
+  color: #4A3222;
+  border: 2px solid #4A3222;
+  box-shadow: 0 3px 0 #4A3222;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  color: var(--text-primary);
-}
-
-.greeting-date {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(74, 50, 34, 0.8);
-  margin-top: 1px;
-}
-
-.header-lock-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--bg-card);
-  border: 2px solid var(--ink-cocoa);
-  box-shadow: var(--shadow-btn-3d-sm);
+  font-size: 0.82rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
   flex-shrink: 0;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
-.header-lock-btn:active {
-  transform: translateY(3px);
-  box-shadow: var(--shadow-btn-press);
+.tab-header-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #4A3222;
+}
+
+.tab-header-btn--circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+.tab-header-btn--pill {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+}
+
+.tab-header-btn--lock-pill {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+}
+
+.tab-header-btn--badge {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* View Content Body */
@@ -836,26 +865,37 @@ textarea:focus-visible {
   gap: 12px;
 }
 
-/* 3-Zone Balanced Home Layout (Fits cleanly in 390x844 without scrolling) */
+/* Two-Anchor Home Layout (Tightly composed for 390x844 without scrolling) */
 .view-body--home {
   flex: 1;
   min-height: 0;
-  padding: 4px 14px calc(82px + env(safe-area-inset-bottom));
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.home-top-zone {
+  padding: 0 14px calc(92px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  overflow: hidden;
+  gap: 0;
 }
 
-.home-hero-zone {
+.home-top-cluster {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-top-cluster .week-strip {
+  margin-top: 12px;
+}
+
+.home-top-cluster .bento-row {
+  margin-top: 10px;
+}
+
+.home-hero-cluster {
+  margin: auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  width: 100%;
 }
 
 /* --------------------------------------------------------------------------
@@ -1012,6 +1052,7 @@ textarea:focus-visible {
   position: relative;
   width: 100%;
   max-width: 344px;
+  margin-bottom: 12px;
   background: var(--bg-card-white);
   border: 2px solid var(--ink-cocoa);
   border-radius: 16px;
@@ -1049,7 +1090,7 @@ textarea:focus-visible {
   line-height: 1.28;
 }
 
-/* Hero Dual-Arc SVG Cycle Ring (224 x 224, Beret Marker & 120px Mascot) */
+/* Hero Dual-Arc SVG Cycle Ring (268 x 268, Beret Marker & 148px Mascot) */
 .cycle-ring-wrap {
   display: flex;
   justify-content: center;
@@ -1058,8 +1099,8 @@ textarea:focus-visible {
 
 .cycle-ring {
   position: relative;
-  width: 224px;
-  height: 224px;
+  width: 268px;
+  height: 268px;
   border-radius: 50%;
   background: var(--active-phase-tint);
   border: 2px solid var(--ink-cocoa);
@@ -1070,8 +1111,8 @@ textarea:focus-visible {
 .cycle-ring-svg {
   position: absolute;
   inset: -2px;
-  width: 224px;
-  height: 224px;
+  width: 268px;
+  height: 268px;
   transform: rotate(-90deg);
   pointer-events: none;
   overflow: visible;
@@ -1080,14 +1121,14 @@ textarea:focus-visible {
 .ring-track {
   fill: none;
   stroke: rgba(74, 50, 34, 0.1);
-  stroke-width: 13;
+  stroke-width: 14;
 }
 
 .ring-arc {
   fill: none;
-  stroke-width: 13;
+  stroke-width: 14;
   stroke-linecap: round;
-  stroke-dasharray: 0 604;
+  stroke-dasharray: 0 679;
   transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
 }
 
@@ -1118,14 +1159,14 @@ textarea:focus-visible {
 
 .cycle-ring-inner {
   position: absolute;
-  inset: 19px;
+  inset: 22px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
+  justify-content: flex-start;
+  padding-top: 14px;
 }
 
 .cycle-ring-copy {
@@ -1139,28 +1180,35 @@ textarea:focus-visible {
 }
 
 .cycle-day-label {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 800;
   line-height: 1.05;
   color: var(--text-primary);
 }
 
+.cycle-day-label--late {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
 .cycle-phase-label {
   margin-top: 2px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 800;
   color: var(--text-secondary);
 }
 
 .cycle-mascot-window {
-  width: 100%;
-  height: 106px;
-  margin-bottom: -6px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 142px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
-  border-radius: 0 0 100px 100px;
+  border-radius: 0 0 120px 120px;
 }
 
 .cycle-mascot-window:active {
@@ -1168,9 +1216,9 @@ textarea:focus-visible {
 }
 
 .cycle-mascot-img {
-  width: 120px;
+  width: 148px;
   height: auto;
-  max-height: 106px;
+  max-height: 138px;
   object-fit: contain;
   object-position: center bottom;
   transform-origin: center bottom;
@@ -1182,122 +1230,62 @@ textarea:focus-visible {
   animation: jellyPop 0.44s var(--spring-bounce) 1;
 }
 
-.mascot-menstrual  { width: 120px; }
-.mascot-follicular { width: 120px; }
-.mascot-ovulation  { width: 120px; }
-.mascot-fertile    { width: 120px; }
-.mascot-luteal     { width: 120px; }
+.mascot-menstrual  { width: 148px; }
+.mascot-follicular { width: 148px; }
+.mascot-ovulation  { width: 148px; }
+.mascot-fertile    { width: 148px; }
+.mascot-luteal     { width: 148px; }
 
-/* Pressable 3D Log Period CTA */
+/* Confident Pressable 3D Log Period CTA & Read-Only Micro-Hint */
 .primary-cta-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 2px;
+  margin-top: 16px;
 }
 
 .btn-log-period {
-  min-height: 40px;
+  width: 232px;
+  height: 48px;
   padding: 0 24px;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   background: var(--phase-menstrual);
   color: #FFFFFF;
-  font-size: 14px;
+  font-size: 0.98rem;
   font-weight: 800;
-  border: 2px solid var(--ink-cocoa);
-  box-shadow: var(--shadow-btn-3d);
+  border: 2px solid #4A3222;
+  box-shadow: 0 4px 0 #4A3222;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-log-period:active {
   transform: translateY(3px);
-  box-shadow: var(--shadow-btn-press);
+  box-shadow: 0 1px 0 #4A3222;
 }
 
 .btn-log-period.is-active {
   background: #FDECEC;
   color: #8C2D2B;
-  border: 2px solid var(--ink-cocoa);
-  box-shadow: var(--shadow-btn-3d-sm);
+  border: 2px solid #4A3222;
+  box-shadow: 0 4px 0 #4A3222;
 }
 
 .btn-log-period.is-active:active {
   transform: translateY(3px);
-  box-shadow: var(--shadow-btn-press);
+  box-shadow: 0 1px 0 #4A3222;
 }
 
-/* Bottom Anchor Card — Purin's Daily Check-In */
-.checkin-card {
-  width: 100%;
-  background: var(--bg-card);
-  border: 2px solid var(--ink-cocoa);
-  border-radius: var(--radius-card);
-  padding: 10px 12px;
-  box-shadow: var(--shadow-info-card);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.checkin-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.checkin-titles {
-  min-width: 0;
-  flex: 1;
-}
-
-.checkin-title {
-  font-size: 13.5px;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.2;
-}
-
-.checkin-status {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 1px;
-}
-
-.checkin-edit-btn {
-  flex-shrink: 0;
-}
-
-.checkin-chips {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-
-.quick-chip {
-  min-height: 34px;
-  padding: 4px 4px;
-  border-radius: 11px;
-  background: var(--bg-card-white);
-  border: 2px solid var(--ink-cocoa);
-  box-shadow: 0 2.5px 0 var(--ink-ledge-soft);
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.1;
+.home-log-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4A3222;
+  opacity: 0.62;
   text-align: center;
-}
-
-.quick-chip.is-selected {
-  background: var(--accent-custard);
-  box-shadow: 0 3px 0 var(--ink-cocoa);
-}
-
-.quick-chip:active {
-  transform: translateY(3px);
-  box-shadow: var(--shadow-btn-press);
+  margin: 10px 0 0 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -1316,24 +1304,6 @@ textarea:focus-visible {
   position: relative;
   z-index: 20;
   background: var(--bg-app);
-}
-
-/* Fixed Top Bar (48px) */
-.cal-topbar {
-  flex-shrink: 0;
-  height: 48px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--accent-custard);
-}
-
-.cal-active-month {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
 }
 
 /* Weekday Strip (32px) */
@@ -1843,6 +1813,32 @@ textarea:focus-visible {
   font-weight: 800;
 }
 
+.setting-row--pin-lock {
+  padding-top: 2px;
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+  border-bottom: 1.5px dashed rgba(74, 50, 34, 0.16);
+}
+
+.setting-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.setting-row-label label {
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.setting-sublabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.25;
+}
+
 .toggle-switch {
   appearance: none;
   -webkit-appearance: none;
@@ -1977,10 +1973,10 @@ textarea:focus-visible {
 .dock-pill {
   position: relative;
   flex: 1;
+  height: 56px;
   background: var(--dock-cocoa);
-  border: 2px solid var(--ink-cocoa);
-  border-radius: var(--radius-pill);
-  padding: 5px;
+  border-radius: 999px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1990,11 +1986,11 @@ textarea:focus-visible {
 
 .dock-indicator {
   position: absolute;
-  top: 5px;
+  top: 6px;
   left: 0;
-  height: 42px;
+  height: 44px;
   width: 0;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   background: var(--accent-custard);
   z-index: 0;
   pointer-events: none;
@@ -2007,10 +2003,10 @@ textarea:focus-visible {
 .dock-tab {
   position: relative;
   z-index: 1;
-  min-width: 42px;
-  height: 42px;
+  min-width: 44px;
+  height: 44px;
   padding: 0 11px;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   color: rgba(255, 253, 245, 0.78);
   display: inline-flex;
   align-items: center;
@@ -2034,7 +2030,7 @@ textarea:focus-visible {
 
 .dock-tab--active {
   color: var(--text-primary);
-  padding: 0 15px;
+  padding: 0 18px;
 }
 
 .dock-tab--active .dock-tab-label {
@@ -2046,8 +2042,8 @@ textarea:focus-visible {
 }
 
 .dock-fab {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--accent-custard);
@@ -2074,7 +2070,7 @@ textarea:focus-visible {
 }
 
 /* --------------------------------------------------------------------------
-   12. Layer 4: Slide-Up Daily Log Drawer
+   12. Layer 4: Slide-Up Daily Log Drawer (Custard Bento & Purin Cameo)
    -------------------------------------------------------------------------- */
 .drawer-backdrop {
   position: absolute;
@@ -2097,17 +2093,17 @@ textarea:focus-visible {
   right: 0;
   bottom: 0;
   z-index: 80;
-  max-height: 86%;
-  background: var(--bg-app);
-  border-top: 2.5px solid var(--ink-cocoa);
-  border-radius: 28px 28px 0 0;
-  box-shadow: 0 -12px 36px rgba(74, 50, 34, 0.18);
+  max-height: 90%;
+  background: #FFFDF5;
+  border-top: 2.5px solid #4A3222;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -12px 36px rgba(74, 50, 34, 0.2);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   transform: translateY(100%);
   visibility: hidden;
   transition: transform 0.34s var(--ease-sheet), visibility 0.34s ease;
-  padding-bottom: env(safe-area-inset-bottom);
   will-change: transform;
 }
 
@@ -2116,131 +2112,378 @@ textarea:focus-visible {
   visibility: visible;
 }
 
+/* Scalloped Custard Header + Live Purin Reaction Cameo */
+.drawer-header-wrap {
+  background: #F7D358;
+  border-radius: 24px 24px 0 0;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
 .drawer-handle {
   width: 40px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(74, 50, 34, 0.24);
-  margin: 10px auto 4px;
+  background: rgba(74, 50, 34, 0.28);
+  margin: 8px auto 2px;
 }
 
 .drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 20px 12px;
-  border-bottom: 1.5px solid rgba(74, 50, 34, 0.1);
+  gap: 10px;
+  padding: 6px 16px 10px;
+}
+
+.drawer-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.drawer-cameo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #FFFDF5;
+  border: 2px solid #4A3222;
+  box-shadow: 0 2px 0 #4A3222;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-cameo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+
+.drawer-header-titles {
+  min-width: 0;
+  flex: 1;
 }
 
 .drawer-title {
-  font-size: 18px;
+  font-size: 1.02rem;
   font-weight: 800;
+  color: #4A3222;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+.drawer-subtitle {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(74, 50, 34, 0.78);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer-close-pill {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #FFFDF5;
+  color: #4A3222;
+  border: 2px solid #4A3222;
+  box-shadow: 0 3px 0 #4A3222;
+  font-size: 0.8rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-close-pill:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #4A3222;
+}
+
+.drawer-header-scallop {
+  display: block;
+  width: 100%;
+  height: 14px;
+  background: #FFFDF5;
+  margin-bottom: -1px;
+}
+
+/* Scrollable Vanilla Cream Drawer Body */
 .drawer-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 16px 20px;
+  background: #FFFDF5;
+  padding: 12px 16px 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.drawer-body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Uniform Custard Bento Cards */
+.drawer-bento-card {
+  background: #FFF9E6;
+  border: 1.5px solid rgba(74, 50, 34, 0.18);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.drawer-bento-card:last-child {
+  margin-bottom: 0;
+}
+
+.drawer-bento-header {
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
 }
 
-.drawer-label {
-  display: block;
-  font-size: 13px;
+.drawer-bento-title {
+  font-size: 0.84rem;
   font-weight: 800;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
+  color: #4A3222;
+  line-height: 1.2;
 }
 
+.drawer-bento-hint {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4A3222;
+  opacity: 0.65;
+  line-height: 1.2;
+}
+
+.drawer-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4A3222;
+  opacity: 0.72;
+  line-height: 1;
+}
+
+/* Bento Card 1: 5-Column Segmented Flow Track with Progressive Dots */
 .segmented-bar {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
-  background: var(--bg-card);
-  border: 2px solid var(--ink-cocoa);
-  padding: 4px;
-  border-radius: 14px;
+  gap: 3px;
+  background: #FFFDF5;
+  border: 1.5px solid #4A3222;
+  border-radius: 12px;
+  padding: 3px;
 }
 
 .seg-btn {
-  min-height: 36px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-secondary);
+  min-height: 40px;
+  padding: 5px 2px 4px;
+  border-radius: 9px;
+  border: 1.5px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  color: rgba(74, 50, 34, 0.76);
+  line-height: 1.1;
+}
+
+.seg-btn:active {
+  transform: scale(0.96);
+}
+
+.seg-label {
+  display: block;
+  white-space: nowrap;
+}
+
+.seg-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5px;
+  height: 5px;
+}
+
+.seg-dot {
+  width: 4.5px;
+  height: 4.5px;
+  border-radius: 50%;
+  background: #D96B66;
+  opacity: 0.68;
 }
 
 .seg-btn--active {
-  background: var(--accent-custard);
-  color: var(--text-primary);
-  border: 1.5px solid var(--ink-cocoa);
-  box-shadow: 0 2px 0 var(--ink-cocoa);
+  background: #F7D358;
+  color: #4A3222;
+  border: 1.5px solid #4A3222;
+  box-shadow: 0 2px 0 #4A3222;
+  font-weight: 800;
 }
 
-.chip-grid {
+.seg-btn--active .seg-dot {
+  background: #4A3222;
+  opacity: 1;
+}
+
+/* Bento Card 2: Strict 3 x 3 Uniform Symptoms Matrix */
+.symptom-matrix {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.symptom-tile {
+  height: 40px;
+  border-radius: 11px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.15;
+  padding: 0 4px;
+  color: #4A3222;
+  background: #FFFDF5;
+  border: 1.5px solid rgba(74, 50, 34, 0.25);
+  box-shadow: 0 2px 0 rgba(74, 50, 34, 0.12);
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.symptom-tile.is-selected {
+  background: #F7D358;
+  border: 2px solid #4A3222;
+  box-shadow: 0 3px 0 #4A3222;
+  font-weight: 800;
+}
+
+.symptom-tile:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #4A3222;
+}
+
+/* Bento Card 3: 5-Column Purin Expression Mood Strip */
+.mood-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.mood-tile {
+  height: 58px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 2px;
+  color: #4A3222;
+  background: #FFFDF5;
+  border: 1.5px solid rgba(74, 50, 34, 0.25);
+  box-shadow: 0 2px 0 rgba(74, 50, 34, 0.12);
+}
+
+.mood-tile.is-selected {
+  background: #F7D358;
+  border: 2px solid #4A3222;
+  box-shadow: 0 3px 0 #4A3222;
+}
+
+.mood-tile:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #4A3222;
+}
+
+.mood-purin-svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.mood-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  text-align: center;
+  color: #4A3222;
+}
+
+/* Bento Card 4: Private Note Textarea */
+.note-input {
+  width: 100%;
+  min-height: 62px;
+  resize: none;
+  background: #FFFDF5;
+  border: 1.5px solid #4A3222;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4A3222;
+  display: block;
+}
+
+.note-input::placeholder {
+  color: rgba(74, 50, 34, 0.45);
+}
+
+/* Pinned Beret-Stamped Primary CTA Footer */
+.drawer-footer {
+  background: #FFFDF5;
+  padding: 10px 16px calc(14px + env(safe-area-inset-bottom)) 16px;
+  border-top: 1px solid rgba(74, 50, 34, 0.1);
+  flex-shrink: 0;
+}
+
+.btn-save-entry {
+  width: 100%;
+  height: 48px;
+  background: #F7D358;
+  border: 2px solid #4A3222;
+  box-shadow: 0 4px 0 #4A3222;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.98rem;
+  color: #4A3222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.chip-btn {
-  min-height: 36px;
-  padding: 0 13px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-card-white);
-  border: 2px solid var(--ink-cocoa);
-  box-shadow: 0 2.5px 0 var(--ink-ledge-soft);
-  font-size: 12.5px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.chip-btn.is-selected {
-  background: var(--accent-custard);
-  box-shadow: 0 3px 0 var(--ink-cocoa);
-}
-
-.chip-btn:active {
+.btn-save-entry:active {
   transform: translateY(3px);
-  box-shadow: var(--shadow-btn-press);
+  box-shadow: 0 1px 0 #4A3222;
 }
 
-.drawer-summary {
-  cursor: pointer;
-  list-style: none;
-}
-
-.biomarkers-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.sub-label {
+.btn-save-beret {
   display: block;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-
-.note-input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 2px solid var(--ink-cocoa);
-  background: var(--bg-card-white);
-  font-size: 14px;
-  font-weight: 600;
-  resize: vertical;
-}
-
-.drawer-footer {
-  padding: 12px 20px 16px;
-  border-top: 1.5px solid rgba(74, 50, 34, 0.1);
+  flex-shrink: 0;
 }
 
 /* Modal Dialog & Toast */

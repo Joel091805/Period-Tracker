@@ -1,0 +1,19 @@
+{
+  "operational_data": {
+    "cycles": [
+      { "period_start_date": "2026-07-14", "period_end_date": "2026-07-18" },
+      { "period_start_date": "2026-08-17", "period_end_date": "2026-08-21" },
+      { "period_start_date": "2026-09-19", "period_end_date": "2026-09-23" },
+      {
+        "period_start_date": "2026-10-22",
+        "period_end_date": "2026-10-26",
+        "confirmed_ovulation_date": "2026-11-06"
+      },
+      { "period_start_date": "2026-11-21", "period_end_date": "2026-11-22" }
+    ],
+    "point_events": [
+      { "date": "2026-11-21", "category": "bleeding", "value": "medium" },
+      { "date": "2026-11-22", "category": "bleeding", "value": "light" }
+    ]
+  }
+}

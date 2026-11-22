@@ -5,6 +5,11 @@
 
 import {
   hasExistingVault,
+  createDeviceVault,
+  unlockDeviceVault,
+  isPinLockEnabled,
+  enablePinLock,
+  disablePinLock,
   createVault,
   unlockVault,
   lockVault,
@@ -42,8 +47,8 @@ import { importFloData } from './floImporter.js';
    Constants & Pompompurin Phase Presentation Map
    ========================================================================== */
 const SPLASH_FADE_MS = 5000;
-const RING_CENTER = 112;
-const RING_RADIUS = 96;
+const RING_CENTER = 124;
+const RING_RADIUS = 108;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 const CALENDAR_MONTHS_PAST = 6;
 const CALENDAR_MONTHS_FUTURE = 4;
@@ -229,17 +234,17 @@ const dom = {
   cycleMascotImg: document.getElementById('cycle-mascot-img'),
   btnLogPeriod: document.getElementById('btn-log-period'),
   btnLogPeriodLabel: document.getElementById('btn-log-period-label'),
-  checkinStatus: document.getElementById('checkin-status'),
-  btnCheckinEdit: document.getElementById('btn-checkin-edit'),
-  checkinQuickChips: document.getElementById('checkin-quick-chips'),
 
   // Continuous Calendar
   calActiveMonth: document.getElementById('cal-active-month'),
+  calHeaderSubtitle: document.getElementById('cal-header-subtitle'),
   calScrollFeed: document.getElementById('cal-scroll-feed'),
   calMonthsList: document.getElementById('cal-months-list'),
   btnCalToday: document.getElementById('btn-cal-today'),
 
   // Insights
+  insightsHeaderSubtitle: document.getElementById('insights-header-subtitle'),
+  insightsHeaderPill: document.getElementById('insights-header-pill'),
   metricAvgCycle: document.getElementById('metric-avg-cycle'),
   metricAvgPeriod: document.getElementById('metric-avg-period'),
   metricAvgPeriodSub: document.getElementById('metric-avg-period-sub'),
@@ -261,6 +266,8 @@ const dom = {
   // Settings
   settingName: document.getElementById('setting-name'),
   settingShowConception: document.getElementById('setting-show-conception'),
+  rowAutoLock: document.getElementById('row-auto-lock'),
+  settingPinLock: document.getElementById('setting-pin-lock'),
   btnImportFlo: document.getElementById('btn-import-flo'),
   fileImportFlo: document.getElementById('file-import-flo'),
   btnExportBackup: document.getElementById('btn-export-backup'),
@@ -273,14 +280,14 @@ const dom = {
   drawerBackdrop: document.getElementById('log-drawer-backdrop'),
   logDrawer: document.getElementById('log-drawer'),
   drawerDateTitle: document.getElementById('drawer-date-title'),
+  drawerCycleSubtitle: document.getElementById('drawer-cycle-subtitle'),
+  drawerCameoFrame: document.getElementById('drawer-cameo-frame'),
+  drawerPurinCameo: document.getElementById('drawer-purin-cameo'),
   btnCloseDrawer: document.getElementById('btn-close-drawer'),
   btnSaveLog: document.getElementById('btn-save-log'),
   drawerFlowGroup: document.getElementById('drawer-flow-group'),
   drawerSymptomsGroup: document.getElementById('drawer-symptoms-group'),
   drawerMoodGroup: document.getElementById('drawer-mood-group'),
-  drawerLhGroup: document.getElementById('drawer-lh-group'),
-  drawerMucusGroup: document.getElementById('drawer-mucus-group'),
-  drawerBbt: document.getElementById('drawer-bbt'),
   drawerNote: document.getElementById('drawer-note'),
 
   // Modal & Toast
@@ -328,6 +335,7 @@ const uiState = {
   // Timers
   toastTimer: null,
   inactivityTimer: null,
+  hiddenAt: null,
 };
 
 /* ==========================================================================
@@ -377,7 +385,7 @@ function triggerJellyPop(el, className = 'is-jelly') {
 }
 
 function getDisplayName(vaultState) {
-  const raw = (vaultState?.settings?.userName || '').trim();
+  const raw = (vaultState?.settings?.userName || '').trim().replace(/!+$/, '').trim();
   return raw || 'Friend';
 }
 
@@ -589,7 +597,10 @@ function enterMainApp() {
 }
 
 function lockToPinGate(showLockedToast = false) {
+  if (!isPinLockEnabled()) return;
   clearTimeout(uiState.inactivityTimer);
+  uiState.inactivityTimer = null;
+  uiState.hiddenAt = null;
   closeLogDrawer(true);
   closeModal();
   lockVault();
@@ -602,20 +613,23 @@ function lockToPinGate(showLockedToast = false) {
   }
 }
 
-function resetInactivityTimer() {
-  clearTimeout(uiState.inactivityTimer);
-  if (!isVaultUnlocked()) return;
-
-  let minutes = 5;
+function getAutoLockMinutes() {
   try {
     const state = getVaultState();
-    minutes = Math.max(1, Number(state.settings?.autoLockMinutes) || 5);
+    return Math.max(1, Number(state.settings?.autoLockMinutes) || 5);
   } catch {
-    return;
+    return 5;
   }
+}
 
+function resetInactivityTimer() {
+  clearTimeout(uiState.inactivityTimer);
+  uiState.inactivityTimer = null;
+  if (!isVaultUnlocked() || !isPinLockEnabled()) return;
+
+  const minutes = getAutoLockMinutes();
   uiState.inactivityTimer = setTimeout(() => {
-    if (isVaultUnlocked()) {
+    if (isVaultUnlocked() && isPinLockEnabled()) {
       lockToPinGate(true);
     }
   }, minutes * 60_000);
@@ -623,14 +637,32 @@ function resetInactivityTimer() {
 
 function initAutoLock() {
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && isVaultUnlocked()) {
-      lockToPinGate(false);
+    if (!isPinLockEnabled() || !isVaultUnlocked()) {
+      uiState.hiddenAt = null;
+      return;
+    }
+
+    if (document.hidden) {
+      uiState.hiddenAt = Date.now();
+    } else {
+      const hiddenAt = uiState.hiddenAt;
+      uiState.hiddenAt = null;
+      if (hiddenAt !== null) {
+        const minutes = getAutoLockMinutes();
+        if (Date.now() - hiddenAt >= minutes * 60_000) {
+          lockToPinGate(true);
+          return;
+        }
+      }
+      resetInactivityTimer();
     }
   });
 
   ['pointerdown', 'keydown', 'touchstart'].forEach((evt) => {
     document.addEventListener(evt, () => {
-      if (isVaultUnlocked()) resetInactivityTimer();
+      if (isVaultUnlocked() && isPinLockEnabled()) {
+        resetInactivityTimer();
+      }
     }, { passive: true });
   });
 }
@@ -737,7 +769,6 @@ function renderTodayView(vaultState, forecast, todayStr) {
   renderBentoMetrics(vaultState, forecast, todayStr);
   renderCycleRing(vaultState, forecast, todayStr);
   renderPurinSpeech(vaultState, forecast, todayStr);
-  renderDailyCheckIn(vaultState, todayStr);
 
   // Primary Action CTA ("Log Period +") reflects today's logged/imported period status
   const isPeriodToday = Boolean(forecast.calendarMap?.[todayStr]?.isLoggedPeriod);
@@ -823,40 +854,6 @@ function renderPurinSpeech(vaultState, forecast, todayStr) {
   dom.purinSpeechText.textContent = message;
 }
 
-function renderDailyCheckIn(vaultState, todayStr) {
-  const log = vaultState?.dailyLogs?.[todayStr] || {};
-  const syms = new Set(Array.isArray(log.symptoms) ? log.symptoms : []);
-  const tags = [];
-
-  if (log.flow && log.flow !== 'none') {
-    tags.push(FLOW_LABELS[log.flow] || log.flow);
-  }
-  if (log.mood && MOOD_LABELS[log.mood]) {
-    tags.push(MOOD_LABELS[log.mood]);
-  }
-  syms.forEach((s) => {
-    tags.push(SYMPTOM_LABELS[s] || s);
-  });
-
-  dom.checkinStatus.textContent = tags.length > 0
-    ? `Today: ${tags.join(' · ')}`
-    : 'Nothing logged yet today';
-
-  // Sync the 4 quick 1-tap toggle chips
-  const quickStates = {
-    sleepy: syms.has('fatigue'),
-    sweet_cravings: syms.has('sweet_cravings'),
-    cramps: syms.has('cramps'),
-    happy: log.mood === 'happy',
-  };
-
-  dom.checkinQuickChips.querySelectorAll('[data-quick]').forEach((chip) => {
-    const active = Boolean(quickStates[chip.dataset.quick]);
-    chip.classList.toggle('is-selected', active);
-    chip.setAttribute('aria-pressed', String(active));
-  });
-}
-
 function renderWeekStrip(forecast, todayStr) {
   const anchor = parseIsoDate(uiState.selectedDate);
   const startOfWeek = addDays(uiState.selectedDate, -anchor.getDay()); // Sunday
@@ -906,6 +903,7 @@ function renderCycleRing(vaultState, forecast) {
   dom.cyclePhaseLabel.textContent = meta.label;
 
   if (!forecast.hasData || !forecast.currentCycleDay) {
+    dom.cycleDayLabel.classList.remove('cycle-day-label--late');
     dom.cycleDayLabel.textContent = 'Day —';
     dom.ringArcPeriodExpected.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE.toFixed(2)}`;
     dom.ringArcPeriod.style.strokeDasharray = `0 ${RING_CIRCUMFERENCE.toFixed(2)}`;
@@ -915,7 +913,15 @@ function renderCycleRing(vaultState, forecast) {
     return;
   }
 
-  dom.cycleDayLabel.textContent = `Day ${forecast.currentCycleDay}`;
+  const isLateHeadline = Boolean(forecast.isLate && forecast.daysLate > 0);
+  dom.cycleDayLabel.classList.toggle('cycle-day-label--late', isLateHeadline);
+  if (isLateHeadline) {
+    dom.cycleDayLabel.textContent = `${forecast.daysLate} ${forecast.daysLate === 1 ? 'Day' : 'Days'} Late`;
+    dom.cyclePhaseLabel.textContent = `Cycle Day ${forecast.currentCycleDay} • Period Late`;
+  } else {
+    dom.cycleDayLabel.textContent = `Day ${forecast.currentCycleDay}`;
+    dom.cyclePhaseLabel.textContent = meta.label;
+  }
   dom.ringMarker.style.opacity = '1';
 
   const cycleLen = Math.max(15, forecast.predictedCycleLength || 28);
@@ -1073,74 +1079,6 @@ function initTodayActions() {
       dom.btnLogPeriod.disabled = false;
     }
   });
-
-  // Purin's Daily Check-In: Edit button & 4 Quick 1-Tap Chips
-  dom.btnCheckinEdit.addEventListener('click', () => {
-    openLogDrawer(getTodayIsoDate());
-  });
-
-  dom.checkinQuickChips.addEventListener('click', async (e) => {
-    const chip = e.target.closest('[data-quick]');
-    if (!chip || !isVaultUnlocked() || chip.disabled) return;
-
-    const key = chip.dataset.quick;
-    const todayStr = getTodayIsoDate();
-    const wasSelected = chip.classList.contains('is-selected');
-    const nextSelected = !wasSelected;
-
-    // Optimistic UI toggle + jellyPop
-    chip.classList.toggle('is-selected', nextSelected);
-    chip.setAttribute('aria-pressed', String(nextSelected));
-    triggerJellyPop(chip);
-    chip.disabled = true;
-
-    try {
-      await commitVaultState((draft) => {
-        const existing = draft.dailyLogs[todayStr] ? { ...draft.dailyLogs[todayStr] } : {};
-        if (!existing.flow) existing.flow = 'none';
-
-        if (key === 'happy') {
-          if (nextSelected) {
-            existing.mood = 'happy';
-          } else if (existing.mood === 'happy') {
-            delete existing.mood;
-          }
-        } else {
-          const symKey = key === 'sleepy' ? 'fatigue' : key;
-          const syms = new Set(Array.isArray(existing.symptoms) ? existing.symptoms : []);
-          if (nextSelected) {
-            syms.add(symKey);
-          } else {
-            syms.delete(symKey);
-          }
-          if (syms.size > 0) {
-            existing.symptoms = Array.from(syms);
-          } else {
-            delete existing.symptoms;
-          }
-        }
-
-        if (isLogEmpty(existing)) {
-          delete draft.dailyLogs[todayStr];
-        } else {
-          draft.dailyLogs[todayStr] = existing;
-        }
-      });
-
-      uiState.speechOverrideKey = nextSelected ? key : null;
-      renderApp();
-      triggerJellyPop(dom.purinSpeechBubble);
-      if (nextSelected) {
-        triggerJellyPop(dom.cycleMascotImg);
-      }
-    } catch (err) {
-      chip.classList.toggle('is-selected', wasSelected);
-      chip.setAttribute('aria-pressed', String(wasSelected));
-      showToast(err.message || 'Could not update check-in');
-    } finally {
-      chip.disabled = false;
-    }
-  });
 }
 
 /* ==========================================================================
@@ -1182,19 +1120,52 @@ function createPuddingCupSvg() {
   return svg;
 }
 
+const ACTIVE_PERIOD_FLOWS = Object.freeze(new Set(['spotting', 'light', 'medium', 'heavy']));
+
+/**
+ * Returns true if the day's log or calendar entry has an active period flow
+ * (Spotting, Light, Medium, or Heavy). Symptom/mood/note-only logs with flow 'none' return false.
+ */
+function hasActivePeriodFlow(entry, dailyLog) {
+  const rawFlow = dailyLog?.flow ?? entry?.flow ?? null;
+  if (typeof rawFlow === 'string') {
+    const normalized = rawFlow.trim().toLowerCase();
+    if (ACTIVE_PERIOD_FLOWS.has(normalized)) return true;
+    if (normalized === 'none' || normalized === '') return false;
+  }
+  return false;
+}
+
+/**
+ * Returns true if a calendar cell should render as a solid logged period day.
+ * Preserves imported historical multi-day cycles even if a symptom-only log (flow: 'none') exists.
+ */
+function isLoggedPeriodTile(entry, dailyLog) {
+  if (hasActivePeriodFlow(entry, dailyLog)) return true;
+  return Boolean(entry?.isLoggedPeriod);
+}
+
 /**
  * Computes a concise period span badge for a given month (e.g., "Dec 20–24").
  */
-function getMonthPeriodBadge(year, month, daysInMonth, calendarMap) {
+function getMonthPeriodBadge(
+  year,
+  month,
+  daysInMonth,
+  calendarMap,
+  dailyLogs,
+  projectedPeriodDates
+) {
   const loggedDays = [];
   const predictedDays = [];
 
   for (let day = 1; day <= daysInMonth; day++) {
     const iso = formatIsoDate(new Date(year, month, day, 12, 0, 0, 0));
     const entry = calendarMap[iso];
-    if (entry?.isLoggedPeriod) {
+    const dailyLog = dailyLogs?.[iso];
+    if (isLoggedPeriodTile(entry, dailyLog)) {
       loggedDays.push(day);
-    } else if (entry?.isPredictedPeriod) {
+    } else if (entry?.isPredictedPeriod || projectedPeriodDates.has(iso)) {
       predictedDays.push(day);
     }
   }
@@ -1225,10 +1196,53 @@ function getMonthPeriodBadge(year, month, daysInMonth, calendarMap) {
 }
 
 function renderCalendarView(vaultState, forecast, todayStr) {
+  const phaseMeta = PHASE_META[forecast.currentPhase || 'unknown'] || PHASE_META.unknown;
+  dom.calHeaderSubtitle.textContent =
+    forecast.hasData && forecast.currentCycleDay
+      ? `Cycle Day ${forecast.currentCycleDay} • ${phaseMeta.label}`
+      : 'Tap any day to log';
+
   const todayDate = parseIsoDate(todayStr);
   const baseYear = todayDate.getFullYear();
   const baseMonth = todayDate.getMonth();
   const prevScrollTop = dom.calScrollFeed.scrollTop;
+
+  const dailyLogs = vaultState?.dailyLogs || {};
+
+  // Build multi-day projected period dates for both the active period and all future predicted cycles
+  const projectedPeriodDates = new Set();
+  if (forecast.hasData) {
+    const periodStats = getInsightsPeriodStats(vaultState, forecast);
+    const avgPeriodLength = Math.max(
+      1,
+      forecast.averagePeriodLength || 0,
+      periodStats.avgPeriodDays || 0
+    );
+
+    // 1. Remaining projected days of the currently active period (startDate + 1 .. startDate + avgPeriodLength - 1)
+    if (forecast.activeCycle && avgPeriodLength > 1) {
+      for (let offset = 1; offset < avgPeriodLength; offset++) {
+        const iso = addDays(forecast.activeCycle.startDate, offset);
+        if (iso >= todayStr) {
+          projectedPeriodDates.add(iso);
+        }
+      }
+    }
+
+    // 2. Full multi-day spans for nextPeriodStart and all subsequent projected cycles
+    const projectedStarts =
+      Array.isArray(forecast.projectedCycles) && forecast.projectedCycles.length > 0
+        ? forecast.projectedCycles.map((c) => c.periodStart).filter(Boolean)
+        : forecast.predictedNextPeriodStart
+          ? [forecast.predictedNextPeriodStart]
+          : [];
+
+    for (const startIso of projectedStarts) {
+      for (let offset = 0; offset < avgPeriodLength; offset++) {
+        projectedPeriodDates.add(addDays(startIso, offset));
+      }
+    }
+  }
 
   const fragment = document.createDocumentFragment();
 
@@ -1260,7 +1274,14 @@ function renderCalendarView(vaultState, forecast, todayStr) {
 
     divider.append(nameSpan, dashLine);
 
-    const periodBadge = getMonthPeriodBadge(year, month, daysInMonth, forecast.calendarMap);
+    const periodBadge = getMonthPeriodBadge(
+      year,
+      month,
+      daysInMonth,
+      forecast.calendarMap,
+      dailyLogs,
+      projectedPeriodDates
+    );
     if (periodBadge) {
       const badge = document.createElement('span');
       badge.className =
@@ -1295,12 +1316,17 @@ function renderCalendarView(vaultState, forecast, todayStr) {
       btn.dataset.date = iso;
       btn.setAttribute('aria-label', `${formatLongDate(iso)}, tap to log`);
 
+      const dailyLog = dailyLogs[iso];
       const isOvulation = Boolean(entry && (entry.isConfirmedOvulation || entry.isPredictedOvulation));
-      if (entry?.isLoggedPeriod) {
+      const isLoggedPeriod = isLoggedPeriodTile(entry, dailyLog);
+      const isPredictedPeriod =
+        !isLoggedPeriod && (Boolean(entry?.isPredictedPeriod) || projectedPeriodDates.has(iso));
+
+      if (isLoggedPeriod) {
         btn.classList.add('cal-cell--logged_period');
       } else if (isOvulation) {
         btn.classList.add('cal-cell--ovulation');
-      } else if (entry?.isPredictedPeriod) {
+      } else if (isPredictedPeriod) {
         btn.classList.add('cal-cell--predicted_period');
       } else if (entry?.isFertileWindow) {
         btn.classList.add('cal-cell--fertile');
@@ -1464,6 +1490,13 @@ function initCalendar() {
    ========================================================================== */
 function renderInsightsView(vaultState, forecast) {
   const periodStats = getInsightsPeriodStats(vaultState, forecast);
+  const totalLoggedCycles = (forecast.cycles || []).length;
+
+  dom.insightsHeaderSubtitle.textContent =
+    totalLoggedCycles > 0
+      ? `Based on ${totalLoggedCycles} logged ${totalLoggedCycles === 1 ? 'cycle' : 'cycles'}`
+      : 'Your personal cycle rhythm';
+  dom.insightsHeaderPill.textContent = `${forecast.predictedCycleLength}d Cycle`;
 
   dom.metricAvgCycle.textContent = `${forecast.predictedCycleLength}d`;
   dom.metricAvgPeriod.textContent = `${periodStats.avgPeriodDays}d`;
@@ -1630,12 +1663,29 @@ function renderCycleRhythm(forecast, periodStats) {
 /* ==========================================================================
    7. View D: Vault & Settings + Backups + Security
    ========================================================================== */
+function syncPinLockVisibility() {
+  const pinEnabled = isPinLockEnabled();
+  if (dom.settingPinLock) {
+    dom.settingPinLock.checked = pinEnabled;
+  }
+  dom.lockButtons.forEach((btn) => {
+    btn.hidden = !pinEnabled;
+  });
+  if (dom.btnChangePin) {
+    dom.btnChangePin.hidden = !pinEnabled;
+  }
+  if (dom.rowAutoLock) {
+    dom.rowAutoLock.hidden = !pinEnabled;
+  }
+}
+
 function renderSettingsView(vaultState) {
   const s = vaultState.settings || {};
   if (document.activeElement !== dom.settingName) {
     dom.settingName.value = s.userName || '';
   }
   dom.settingShowConception.checked = s.showConceptionChance !== false;
+  syncPinLockVisibility();
 
   Object.keys(SETTING_LIMITS).forEach((key) => {
     const el = document.getElementById(`val-${key}`);
@@ -1773,6 +1823,71 @@ function initSettings() {
     });
   });
 
+  dom.settingPinLock.addEventListener('change', () => {
+    if (!isVaultUnlocked()) return;
+    const wantsEnabled = dom.settingPinLock.checked;
+
+    // Revert toggle visually until the modal confirmation completes
+    dom.settingPinLock.checked = !wantsEnabled;
+
+    if (wantsEnabled) {
+      openModal({
+        title: 'Enable 6-Digit PIN Lock',
+        desc: 'Choose a 6-digit numeric PIN to lock Purin Cycle on this device.',
+        confirmLabel: 'Enable PIN',
+        fields: [
+          { id: 'modal-enable-pin-1', type: 'password', inputMode: 'numeric', maxLength: 6, placeholder: 'New 6-digit PIN' },
+          { id: 'modal-enable-pin-2', type: 'password', inputMode: 'numeric', maxLength: 6, placeholder: 'Confirm 6-digit PIN' },
+        ],
+        onConfirm: async (values) => {
+          const pin = (values['modal-enable-pin-1'] || '').trim();
+          const confirmPin = (values['modal-enable-pin-2'] || '').trim();
+          if (!/^\d{6}$/.test(pin)) {
+            return 'PIN must be exactly 6 numeric digits.';
+          }
+          if (pin !== confirmPin) {
+            return 'PINs do not match.';
+          }
+          try {
+            await enablePinLock(pin);
+            renderApp();
+            resetInactivityTimer();
+            showToast('6-digit PIN lock enabled');
+            return null;
+          } catch (err) {
+            return err.message || 'Could not enable PIN lock.';
+          }
+        },
+      });
+    } else {
+      openModal({
+        title: 'Turn Off PIN Lock',
+        desc: 'Enter your current 6-digit PIN. Your data remains AES-256 encrypted locally on this device.',
+        confirmLabel: 'Turn Off PIN',
+        fields: [
+          { id: 'modal-disable-pin', type: 'password', inputMode: 'numeric', maxLength: 6, placeholder: 'Current 6-digit PIN' },
+        ],
+        onConfirm: async (values) => {
+          const curPin = (values['modal-disable-pin'] || '').trim();
+          if (!/^\d{6}$/.test(curPin)) {
+            return 'PIN must be exactly 6 numeric digits.';
+          }
+          try {
+            await disablePinLock(curPin);
+            clearTimeout(uiState.inactivityTimer);
+            uiState.inactivityTimer = null;
+            uiState.hiddenAt = null;
+            renderApp();
+            showToast('PIN lock turned off');
+            return null;
+          } catch (err) {
+            return err.message || 'Incorrect PIN.';
+          }
+        },
+      });
+    }
+  });
+
   dom.btnChangePin.addEventListener('click', () => {
     openModal({
       title: 'Change Vault PIN',
@@ -1825,14 +1940,19 @@ function initSettings() {
               return 'Please type WIPE to confirm.';
             }
             await panicWipeVault();
-            uiState.vaultExists = false;
+            await createDeviceVault(createEmptyVaultState());
+            uiState.vaultExists = true;
             uiState.onboardingStep = 'create';
             uiState.firstPinAttempt = '';
             uiState.stagedFloJson = null;
+            uiState.hiddenAt = null;
+            clearTimeout(uiState.inactivityTimer);
+            uiState.inactivityTimer = null;
             dom.onboardingName.value = '';
             dom.onboardingFloStatus.hidden = true;
-            lockToPinGate(false);
-            showToast('Vault permanently wiped');
+            closeLogDrawer(true);
+            enterMainApp();
+            showToast('Vault wiped');
             return null;
           },
         });
@@ -1989,9 +2109,100 @@ function isLogEmpty(entry) {
   return !(hasFlow || hasSymptoms || hasMood || hasLh || hasMucus || hasBbt || hasNote);
 }
 
+const DRAWER_CAMEO_SPRITES = Object.freeze({
+  eating: 'assets/icons/pompom/pompom_eating.png',
+  sleeping: 'assets/icons/pompom/pompom_sleeping.png',
+  love: 'assets/icons/pompom/pompom_love.png',
+  waving: 'assets/icons/pompom/pompom_waving.png',
+});
+
+function getDrawerCycleSubtitle(isoDate, forecast) {
+  if (!forecast || !forecast.hasData) {
+    return 'Daily Check-in • Ready to Track';
+  }
+
+  if (isoDate === forecast.today && forecast.currentCycleDay) {
+    const meta = PHASE_META[forecast.currentPhase || 'unknown'] || PHASE_META.unknown;
+    return `Cycle Day ${forecast.currentCycleDay} • ${meta.label}`;
+  }
+
+  const calEntry = forecast.calendarMap?.[isoDate];
+  const allCycles = [
+    ...(Array.isArray(forecast.cycles) ? forecast.cycles : []),
+    ...(Array.isArray(forecast.projectedCycles) ? forecast.projectedCycles : []),
+  ].sort((a, b) => (a.startDate < b.startDate ? -1 : a.startDate > b.startDate ? 1 : 0));
+
+  let matchedCycle = null;
+  for (let i = allCycles.length - 1; i >= 0; i--) {
+    if (allCycles[i].startDate <= isoDate) {
+      matchedCycle = allCycles[i];
+      break;
+    }
+  }
+
+  if (!matchedCycle) {
+    return 'Daily Check-in • Past Entry';
+  }
+
+  const cycleDay = diffDays(matchedCycle.startDate, isoDate) + 1;
+  let phaseLabel = 'Follicular Phase';
+
+  if (calEntry?.isLoggedPeriod || calEntry?.isPredictedPeriod) {
+    phaseLabel = 'Menstrual Phase';
+  } else if (calEntry?.isConfirmedOvulation || calEntry?.isPredictedOvulation) {
+    phaseLabel = 'Ovulation Phase';
+  } else if (calEntry?.isFertileWindow) {
+    phaseLabel = 'Fertile Window';
+  } else {
+    const cycleLen = forecast.predictedCycleLength || 28;
+    const lutealLen = forecast.lutealPhaseLength || 14;
+    const estOvulationDay = Math.max(1, cycleLen - lutealLen);
+    if (cycleDay > cycleLen) {
+      phaseLabel = 'Period Late';
+    } else if (cycleDay > estOvulationDay) {
+      phaseLabel = 'Luteal Phase';
+    }
+  }
+
+  return `Cycle Day ${cycleDay} • ${phaseLabel}`;
+}
+
+function updateDrawerCameo(animate = true) {
+  if (!dom.drawerPurinCameo) return;
+
+  const selectedSymptoms = new Set(
+    Array.from(dom.drawerSymptomsGroup.querySelectorAll('.chip-btn.is-selected')).map(
+      (b) => b.dataset.symptom
+    )
+  );
+  const selectedMoodBtn = dom.drawerMoodGroup.querySelector('.chip-btn.is-selected');
+  const selectedMood = selectedMoodBtn ? selectedMoodBtn.dataset.mood : null;
+
+  let nextSprite = DRAWER_CAMEO_SPRITES.waving;
+  if (selectedSymptoms.has('sweet_cravings')) {
+    nextSprite = DRAWER_CAMEO_SPRITES.eating;
+  } else if (selectedSymptoms.has('fatigue') || selectedMood === 'low_energy') {
+    nextSprite = DRAWER_CAMEO_SPRITES.sleeping;
+  } else if (selectedMood === 'happy') {
+    nextSprite = DRAWER_CAMEO_SPRITES.love;
+  }
+
+  const currentSrc = dom.drawerPurinCameo.getAttribute('src');
+  const changed = currentSrc !== nextSprite;
+  if (changed) {
+    dom.drawerPurinCameo.setAttribute('src', nextSprite);
+  }
+  if (animate && changed && dom.drawerCameoFrame) {
+    triggerJellyPop(dom.drawerCameoFrame);
+  }
+}
+
 function populateDrawer(isoDate) {
   uiState.drawerDate = isoDate;
   dom.drawerDateTitle.textContent = formatLongDate(isoDate);
+  if (dom.drawerCycleSubtitle) {
+    dom.drawerCycleSubtitle.textContent = getDrawerCycleSubtitle(isoDate, uiState.latestForecast);
+  }
 
   const vaultState = isVaultUnlocked() ? getVaultState() : null;
   const log = vaultState?.dailyLogs?.[isoDate] || {};
@@ -2020,25 +2231,11 @@ function populateDrawer(isoDate) {
     btn.setAttribute('aria-pressed', String(active));
   });
 
-  // LH Test
-  const activeLh = VALID_LH_TESTS.has(log.lhTest) ? log.lhTest : null;
-  dom.drawerLhGroup.querySelectorAll('.chip-btn').forEach((btn) => {
-    const active = btn.dataset.lh === activeLh;
-    btn.classList.toggle('is-selected', active);
-    btn.setAttribute('aria-pressed', String(active));
-  });
-
-  // Cervical Mucus
-  const activeMucus = VALID_CERVICAL_MUCUS.has(log.cervicalMucus) ? log.cervicalMucus : null;
-  dom.drawerMucusGroup.querySelectorAll('.chip-btn').forEach((btn) => {
-    const active = btn.dataset.mucus === activeMucus;
-    btn.classList.toggle('is-selected', active);
-    btn.setAttribute('aria-pressed', String(active));
-  });
-
-  // BBT & Note
-  dom.drawerBbt.value = typeof log.bbt === 'number' ? String(log.bbt) : '';
+  // Note
   dom.drawerNote.value = typeof log.note === 'string' ? log.note : '';
+
+  // Sync live Pompompurin reaction cameo
+  updateDrawerCameo(false);
 }
 
 function collectDrawerEntry() {
@@ -2050,23 +2247,11 @@ function collectDrawerEntry() {
   ).map((b) => b.dataset.symptom);
 
   const moodBtn = dom.drawerMoodGroup.querySelector('.chip-btn.is-selected');
-  const lhBtn = dom.drawerLhGroup.querySelector('.chip-btn.is-selected');
-  const mucusBtn = dom.drawerMucusGroup.querySelector('.chip-btn.is-selected');
-
-  const bbtRaw = dom.drawerBbt.value.trim();
-  const bbtNum = bbtRaw === '' ? null : Number(bbtRaw);
-  const bbt = bbtNum !== null && Number.isFinite(bbtNum) && bbtNum >= 34 && bbtNum <= 42
-    ? Number(bbtNum.toFixed(2))
-    : null;
-
   const note = dom.drawerNote.value.trim();
 
   const entry = { flow };
   if (symptoms.length > 0) entry.symptoms = symptoms;
   if (moodBtn) entry.mood = moodBtn.dataset.mood;
-  if (lhBtn) entry.lhTest = lhBtn.dataset.lh;
-  if (mucusBtn) entry.cervicalMucus = mucusBtn.dataset.mucus;
-  if (bbt !== null) entry.bbt = bbt;
   if (note.length > 0) entry.note = note;
 
   return entry;
@@ -2148,45 +2333,35 @@ function initDrawer() {
     triggerJellyPop(btn);
   });
 
-  // Multi-select symptoms with jellyPop
+  // Multi-select symptoms with jellyPop + live Purin reaction cameo
   dom.drawerSymptomsGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-symptom]');
     if (!btn) return;
     const selected = btn.classList.toggle('is-selected');
     btn.setAttribute('aria-pressed', String(selected));
     triggerJellyPop(btn);
+    updateDrawerCameo(true);
   });
 
-  // Single-select mood, LH, and mucus groups with jellyPop
-  [dom.drawerMoodGroup, dom.drawerLhGroup, dom.drawerMucusGroup].forEach((group) => {
-    group.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip-btn');
-      if (!btn) return;
-      const wasSelected = btn.classList.contains('is-selected');
-      group.querySelectorAll('.chip-btn').forEach((b) => {
-        b.classList.remove('is-selected');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      if (!wasSelected) {
-        btn.classList.add('is-selected');
-        btn.setAttribute('aria-pressed', 'true');
-      }
-      triggerJellyPop(btn);
+  // Single-select mood group with jellyPop + live Purin reaction cameo
+  dom.drawerMoodGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip-btn');
+    if (!btn) return;
+    const wasSelected = btn.classList.contains('is-selected');
+    dom.drawerMoodGroup.querySelectorAll('.chip-btn').forEach((b) => {
+      b.classList.remove('is-selected');
+      b.setAttribute('aria-pressed', 'false');
     });
+    if (!wasSelected) {
+      btn.classList.add('is-selected');
+      btn.setAttribute('aria-pressed', 'true');
+    }
+    triggerJellyPop(btn);
+    updateDrawerCameo(true);
   });
 
   dom.btnSaveLog.addEventListener('click', async () => {
     if (!isVaultUnlocked() || dom.btnSaveLog.disabled) return;
-
-    const bbtRaw = dom.drawerBbt.value.trim();
-    if (bbtRaw !== '') {
-      const bbtNum = Number(bbtRaw);
-      if (!Number.isFinite(bbtNum) || bbtNum < 34 || bbtNum > 42) {
-        showToast('BBT must be between 34.0 and 42.0 °C');
-        dom.drawerBbt.focus();
-        return;
-      }
-    }
 
     const dateKey = uiState.drawerDate;
     const entry = collectDrawerEntry();
@@ -2201,6 +2376,11 @@ function initDrawer() {
           BLEEDING_FLOWS.has(prevEntry?.flow) ||
           Boolean(uiState.latestForecast?.calendarMap?.[dateKey]?.isLoggedPeriod);
         const removedFlowDates = wasBleeding && !isNowBleeding ? [dateKey] : [];
+
+        // Preserve any existing imported biomarker fields if present
+        if (prevEntry?.lhTest) entry.lhTest = prevEntry.lhTest;
+        if (prevEntry?.cervicalMucus) entry.cervicalMucus = prevEntry.cervicalMucus;
+        if (typeof prevEntry?.bbt === 'number') entry.bbt = prevEntry.bbt;
 
         if (isLogEmpty(entry)) {
           delete draft.dailyLogs[dateKey];
@@ -2243,6 +2423,35 @@ async function boot() {
   } catch {
     uiState.vaultExists = false;
   }
+
+  if (!uiState.vaultExists) {
+    try {
+      await createDeviceVault(createEmptyVaultState());
+      uiState.vaultExists = true;
+      enterMainApp();
+      return;
+    } catch (err) {
+      dom.pinGate.hidden = false;
+      configurePinGateUI();
+      triggerPinError(err.message || 'Could not initialize local vault.');
+      return;
+    }
+  }
+
+  if (!isPinLockEnabled()) {
+    try {
+      await unlockDeviceVault();
+      enterMainApp();
+      return;
+    } catch (err) {
+      dom.pinGate.hidden = false;
+      configurePinGateUI();
+      triggerPinError(err.message || 'Could not unlock local vault.');
+      return;
+    }
+  }
+
+  dom.pinGate.hidden = false;
   configurePinGateUI();
 }
 

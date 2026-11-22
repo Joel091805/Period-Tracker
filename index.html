@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#F7D358">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -164,7 +164,7 @@
       <!-- ================================================================
            LAYER 2: COCOA PIN GATE (Lock & First-Time Onboarding)
            ================================================================ -->
-      <section class="pin-gate" id="pin-gate" aria-label="Vault PIN Lock">
+      <section class="pin-gate" id="pin-gate" aria-label="Vault PIN Lock" hidden>
         <div class="pin-gate-inner">
           <div class="beret-emblem" aria-hidden="true">
             <svg viewBox="0 0 80 54" width="68" height="46" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -238,31 +238,31 @@
       <div class="app-main" id="app-main" hidden>
         <main class="app-views" id="app-views">
 
-          <!-- VIEW A: HOME (CYCLE) DASHBOARD — Pompompurin World 3-Zone Layout -->
+          <!-- VIEW A: HOME (CYCLE) DASHBOARD — Two-Anchor Pompompurin Layout -->
           <section class="app-view app-view--home app-view--active" id="view-today" data-view="today" aria-label="Cycle Dashboard">
-            <!-- Caramel-Scalloped Custard Header -->
-            <div class="custard-header-wrap">
-              <header class="top-header top-header--compact">
-                <div class="greeting-block">
-                  <h1 class="greeting-title" id="greeting-title">Hello, Friend!</h1>
-                  <p class="greeting-date" id="greeting-date">22nd November, 2026</p>
+            <!-- Unified Caramel-Scalloped Custard Header -->
+            <div class="tab-header-wrap">
+              <header class="tab-header">
+                <div class="tab-header-titles">
+                  <h1 class="tab-header-title" id="greeting-title">Hello, Friend!</h1>
+                  <p class="tab-header-subtitle" id="greeting-date">22nd November, 2026</p>
                 </div>
-                <button type="button" class="header-lock-btn" id="btn-lock-vault" aria-label="Lock vault">
+                <button type="button" class="tab-header-btn tab-header-btn--circle" id="btn-lock-vault" aria-label="Lock vault" hidden>
                   <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <rect x="4" y="11" width="16" height="10" rx="3"/>
                     <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
                   </svg>
                 </button>
               </header>
-              <svg class="custard-scallop" viewBox="0 0 430 16" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M0 0 H430 V6 Q408.5 16 387 6 Q365.5 16 344 6 Q322.5 16 301 6 Q279.5 16 258 6 Q236.5 16 215 6 Q193.5 16 172 6 Q150.5 16 129 6 Q107.5 16 86 6 Q64.5 16 43 6 Q21.5 16 0 6 Z" fill="#F7D358"/>
-                <path d="M0 6 Q21.5 16 43 6 Q64.5 16 86 6 Q107.5 16 129 6 Q150.5 16 172 6 Q193.5 16 215 6 Q236.5 16 258 6 Q279.5 16 301 6 Q322.5 16 344 6 Q365.5 16 387 6 Q408.5 16 430 6" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+              <svg class="tab-header-scallop" viewBox="0 0 430 14" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0 0 H430 V5 Q408.5 14 387 5 Q365.5 14 344 5 Q322.5 14 301 5 Q279.5 14 258 5 Q236.5 14 215 5 Q193.5 14 172 5 Q150.5 14 129 5 Q107.5 14 86 5 Q64.5 14 43 5 Q21.5 14 0 5 Z" fill="#F7D358"/>
+                <path d="M0 5 Q21.5 14 43 5 Q64.5 14 86 5 Q107.5 14 129 5 Q150.5 14 172 5 Q193.5 14 215 5 Q236.5 14 258 5 Q279.5 14 301 5 Q322.5 14 344 5 Q365.5 14 387 5 Q408.5 14 430 5" fill="none" stroke="#4A3222" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </div>
 
             <div class="view-body view-body--home">
-              <!-- ZONE 1: Compact Week Strip + 3 Non-Redundant Bento Cards -->
-              <div class="home-top-zone">
+              <!-- CLUSTER 1: Top Dashboard Header Block (Week Strip + 3 Bento Cards) -->
+              <div class="home-top-cluster">
                 <div class="week-strip" id="week-strip" role="listbox" aria-label="Current week"></div>
 
                 <div class="bento-row" id="bento-row">
@@ -289,31 +289,31 @@
                 </div>
               </div>
 
-              <!-- ZONE 2: Speech Bubble + Hero Ring (224x224) + Beret Marker + Log CTA -->
-              <div class="home-hero-zone">
+              <!-- CLUSTER 2: Center-Bottom Hero Stage (Speech Bubble + 268px Ring + CTA + Hint) -->
+              <div class="home-hero-cluster">
                 <div class="purin-speech-bubble" id="purin-speech-bubble" aria-live="polite">
                   <p class="purin-speech-text" id="purin-speech-text">Purin is here for you! Log a period to start your cozy cycle~</p>
                 </div>
 
                 <div class="cycle-ring-wrap">
                   <div class="cycle-ring" id="cycle-ring">
-                    <svg class="cycle-ring-svg" viewBox="0 0 224 224" width="224" height="224" aria-hidden="true">
+                    <svg class="cycle-ring-svg" viewBox="0 0 248 248" width="268" height="268" aria-hidden="true">
                       <!-- Base Cream Track -->
-                      <circle class="ring-track" cx="112" cy="112" r="96" />
+                      <circle class="ring-track" cx="124" cy="124" r="108" />
                       <!-- Full Expected Period Arc (Soft Blush) -->
-                      <circle class="ring-arc ring-arc--period-expected" id="ring-arc-period-expected" cx="112" cy="112" r="96" />
+                      <circle class="ring-arc ring-arc--period-expected" id="ring-arc-period-expected" cx="124" cy="124" r="108" />
                       <!-- Logged Period Arc (Solid Terracotta) -->
-                      <circle class="ring-arc ring-arc--period" id="ring-arc-period" cx="112" cy="112" r="96" />
+                      <circle class="ring-arc ring-arc--period" id="ring-arc-period" cx="124" cy="124" r="108" />
                       <!-- Fertile Window Arc (Matcha Sage) -->
-                      <circle class="ring-arc ring-arc--fertile" id="ring-arc-fertile" cx="112" cy="112" r="96" />
+                      <circle class="ring-arc ring-arc--fertile" id="ring-arc-fertile" cx="124" cy="124" r="108" />
                       <!-- Predicted / Confirmed Ovulation Marker Dot (Deep Matcha) -->
-                      <circle class="ring-ovulation-dot" id="ring-ovulation-dot" cx="112" cy="16" r="5" />
+                      <circle class="ring-ovulation-dot" id="ring-ovulation-dot" cx="124" cy="16" r="5.5" />
                       <!-- Pompompurin Beret Progress Marker -->
-                      <g class="ring-beret-marker" id="ring-marker" transform="translate(112, 16) rotate(90)">
-                        <ellipse cx="0" cy="1.5" rx="11" ry="5.6" fill="#FFFDF5"/>
-                        <ellipse cx="0" cy="1.5" rx="9.4" ry="4.4" fill="#4A3222"/>
-                        <path d="M-7.8 0.5C-6.6 -3.8 -3.3 -5.5 0 -5.5C3.3 -5.5 6.6 -3.8 7.8 0.5C4.8 2.2 -4.8 2.2 -7.8 0.5Z" fill="#5D3E2B"/>
-                        <rect x="-1.3" y="-8.2" width="2.6" height="3.5" rx="1.3" fill="#4A3222"/>
+                      <g class="ring-beret-marker" id="ring-marker" transform="translate(124, 16) rotate(90)">
+                        <ellipse cx="0" cy="1.5" rx="12" ry="6.2" fill="#FFFDF5"/>
+                        <ellipse cx="0" cy="1.5" rx="10.2" ry="4.8" fill="#4A3222"/>
+                        <path d="M-8.5 0.5C-7.2 -4.2 -3.6 -6 0 -6C3.6 -6 7.2 -4.2 8.5 0.5C5.2 2.4 -5.2 2.4 -8.5 0.5Z" fill="#5D3E2B"/>
+                        <rect x="-1.4" y="-8.8" width="2.8" height="3.8" rx="1.4" fill="#4A3222"/>
                       </g>
                     </svg>
 
@@ -345,24 +345,9 @@
                     <span id="btn-log-period-label">Log Period +</span>
                   </button>
                 </div>
-              </div>
 
-              <!-- ZONE 3: Bottom Anchor Card — Purin's Daily Check-In -->
-              <article class="checkin-card" id="checkin-card" aria-label="Purin's Daily Check-In">
-                <div class="checkin-header">
-                  <div class="checkin-titles">
-                    <h2 class="checkin-title">Purin's Daily Check-In</h2>
-                    <p class="checkin-status" id="checkin-status">Nothing logged yet today</p>
-                  </div>
-                  <button type="button" class="pill-btn checkin-edit-btn" id="btn-checkin-edit">Edit</button>
-                </div>
-                <div class="checkin-chips" id="checkin-quick-chips" role="group" aria-label="Quick daily toggles">
-                  <button type="button" class="quick-chip" data-quick="sleepy" aria-pressed="false">Sleepy</button>
-                  <button type="button" class="quick-chip" data-quick="sweet_cravings" aria-pressed="false">Sweet Cravings</button>
-                  <button type="button" class="quick-chip" data-quick="cramps" aria-pressed="false">Cramps</button>
-                  <button type="button" class="quick-chip" data-quick="happy" aria-pressed="false">Happy</button>
-                </div>
-              </article>
+                <p class="home-log-hint">Tap + below to log symptoms or notes</p>
+              </div>
             </div>
           </section>
 
@@ -370,14 +355,17 @@
           <section class="app-view app-view--calendar" id="view-calendar" data-view="calendar" aria-label="Continuous Calendar" hidden>
             <!-- Unified Non-Shrinking Top Header Stack -->
             <div class="cal-sticky-top">
-              <div class="custard-header-wrap custard-header-wrap--compact">
-                <header class="cal-topbar">
-                  <h2 class="cal-active-month" id="cal-active-month">November 2026</h2>
-                  <button type="button" class="pill-btn" id="btn-cal-today">Today</button>
+              <div class="tab-header-wrap">
+                <header class="tab-header">
+                  <div class="tab-header-titles">
+                    <h1 class="tab-header-title" id="cal-active-month">November 2026</h1>
+                    <p class="tab-header-subtitle" id="cal-header-subtitle">Tap any day to log</p>
+                  </div>
+                  <button type="button" class="tab-header-btn tab-header-btn--pill" id="btn-cal-today">Today</button>
                 </header>
-                <svg class="custard-scallop" viewBox="0 0 430 14" preserveAspectRatio="none" aria-hidden="true">
+                <svg class="tab-header-scallop" viewBox="0 0 430 14" preserveAspectRatio="none" aria-hidden="true">
                   <path d="M0 0 H430 V5 Q408.5 14 387 5 Q365.5 14 344 5 Q322.5 14 301 5 Q279.5 14 258 5 Q236.5 14 215 5 Q193.5 14 172 5 Q150.5 14 129 5 Q107.5 14 86 5 Q64.5 14 43 5 Q21.5 14 0 5 Z" fill="#F7D358"/>
-                  <path d="M0 5 Q21.5 14 43 5 Q64.5 14 86 5 Q107.5 14 129 5 Q150.5 14 172 5 Q193.5 14 215 5 Q236.5 14 258 5 Q279.5 14 301 5 Q322.5 14 344 5 Q365.5 14 387 5 Q408.5 14 430 5" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <path d="M0 5 Q21.5 14 43 5 Q64.5 14 86 5 Q107.5 14 129 5 Q150.5 14 172 5 Q193.5 14 215 5 Q236.5 14 258 5 Q279.5 14 301 5 Q322.5 14 344 5 Q365.5 14 387 5 Q408.5 14 430 5" fill="none" stroke="#4A3222" stroke-width="2" stroke-linecap="round"/>
                 </svg>
               </div>
 
@@ -420,19 +408,17 @@
 
           <!-- VIEW C: CYCLE INSIGHTS -->
           <section class="app-view app-view--scroll" id="view-insights" data-view="insights" aria-label="Cycle Insights" hidden>
-            <div class="custard-header-wrap custard-header-wrap--compact">
-              <header class="view-header">
-                <h2 class="view-title">Insights</h2>
-                <button type="button" class="header-lock-btn" data-action="lock-vault" aria-label="Lock vault">
-                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="4" y="11" width="16" height="10" rx="3"/>
-                    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
-                  </svg>
-                </button>
+            <div class="tab-header-wrap">
+              <header class="tab-header">
+                <div class="tab-header-titles">
+                  <h1 class="tab-header-title">Cycle Insights</h1>
+                  <p class="tab-header-subtitle" id="insights-header-subtitle">Your personal cycle rhythm</p>
+                </div>
+                <span class="tab-header-btn tab-header-btn--badge tabular" id="insights-header-pill">28d Cycle</span>
               </header>
-              <svg class="custard-scallop" viewBox="0 0 430 14" preserveAspectRatio="none" aria-hidden="true">
+              <svg class="tab-header-scallop" viewBox="0 0 430 14" preserveAspectRatio="none" aria-hidden="true">
                 <path d="M0 0 H430 V5 Q408.5 14 387 5 Q365.5 14 344 5 Q322.5 14 301 5 Q279.5 14 258 5 Q236.5 14 215 5 Q193.5 14 172 5 Q150.5 14 129 5 Q107.5 14 86 5 Q64.5 14 43 5 Q21.5 14 0 5 Z" fill="#F7D358"/>
-                <path d="M0 5 Q21.5 14 43 5 Q64.5 14 86 5 Q107.5 14 129 5 Q150.5 14 172 5 Q193.5 14 215 5 Q236.5 14 258 5 Q279.5 14 301 5 Q322.5 14 344 5 Q365.5 14 387 5 Q408.5 14 430 5" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                <path d="M0 5 Q21.5 14 43 5 Q64.5 14 86 5 Q107.5 14 129 5 Q150.5 14 172 5 Q193.5 14 215 5 Q236.5 14 258 5 Q279.5 14 301 5 Q322.5 14 344 5 Q365.5 14 387 5 Q408.5 14 430 5" fill="none" stroke="#4A3222" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </div>
 
@@ -536,19 +522,17 @@
 
           <!-- VIEW D: VAULT & SETTINGS -->
           <section class="app-view app-view--scroll" id="view-settings" data-view="settings" aria-label="Vault and Settings" hidden>
-            <div class="custard-header-wrap custard-header-wrap--compact">
-              <header class="view-header">
-                <h2 class="view-title">Vault &amp; Settings</h2>
-                <button type="button" class="header-lock-btn" data-action="lock-vault" aria-label="Lock vault">
-                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="4" y="11" width="16" height="10" rx="3"/>
-                    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
-                  </svg>
-                </button>
+            <div class="tab-header-wrap">
+              <header class="tab-header">
+                <div class="tab-header-titles">
+                  <h1 class="tab-header-title">Vault &amp; Settings</h1>
+                  <p class="tab-header-subtitle">Local AES-256 Encrypted</p>
+                </div>
+                <button type="button" class="tab-header-btn tab-header-btn--lock-pill" data-action="lock-vault" aria-label="Lock vault now" hidden>Lock Now</button>
               </header>
-              <svg class="custard-scallop" viewBox="0 0 430 14" preserveAspectRatio="none" aria-hidden="true">
+              <svg class="tab-header-scallop" viewBox="0 0 430 14" preserveAspectRatio="none" aria-hidden="true">
                 <path d="M0 0 H430 V5 Q408.5 14 387 5 Q365.5 14 344 5 Q322.5 14 301 5 Q279.5 14 258 5 Q236.5 14 215 5 Q193.5 14 172 5 Q150.5 14 129 5 Q107.5 14 86 5 Q64.5 14 43 5 Q21.5 14 0 5 Z" fill="#F7D358"/>
-                <path d="M0 5 Q21.5 14 43 5 Q64.5 14 86 5 Q107.5 14 129 5 Q150.5 14 172 5 Q193.5 14 215 5 Q236.5 14 258 5 Q279.5 14 301 5 Q322.5 14 344 5 Q365.5 14 387 5 Q408.5 14 430 5" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                <path d="M0 5 Q21.5 14 43 5 Q64.5 14 86 5 Q107.5 14 129 5 Q150.5 14 172 5 Q193.5 14 215 5 Q236.5 14 258 5 Q279.5 14 301 5 Q322.5 14 344 5 Q365.5 14 387 5 Q408.5 14 430 5" fill="none" stroke="#4A3222" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </div>
 
@@ -591,7 +575,7 @@
                     <button type="button" class="stepper-btn" data-delta="1" aria-label="Increase luteal phase length">+</button>
                   </div>
                 </div>
-                <div class="setting-row">
+                <div class="setting-row" id="row-auto-lock" hidden>
                   <span>Auto-Lock (minutes)</span>
                   <div class="stepper" data-setting="autoLockMinutes">
                     <button type="button" class="stepper-btn" data-delta="-1" aria-label="Decrease auto-lock minutes">−</button>
@@ -614,8 +598,15 @@
 
               <article class="card section-card">
                 <h3 class="card-heading">Security</h3>
+                <div class="setting-row setting-row--pin-lock">
+                  <div class="setting-row-label">
+                    <label for="setting-pin-lock">Require 6-Digit PIN Lock</label>
+                    <span class="setting-sublabel">Optional extra lock on this device</span>
+                  </div>
+                  <input type="checkbox" id="setting-pin-lock" class="toggle-switch" />
+                </div>
                 <div class="settings-actions">
-                  <button type="button" class="btn-secondary" id="btn-change-pin">Change Vault PIN</button>
+                  <button type="button" class="btn-secondary" id="btn-change-pin" hidden>Change Vault PIN</button>
                   <button type="button" class="btn-danger" id="btn-panic-wipe">Panic Wipe Vault</button>
                 </div>
               </article>
@@ -675,89 +666,217 @@
            ================================================================ -->
       <div class="drawer-backdrop" id="log-drawer-backdrop" hidden></div>
       <aside class="log-drawer" id="log-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-date-title" aria-hidden="true">
-        <div class="drawer-handle" aria-hidden="true"></div>
-        <header class="drawer-header">
-          <h2 class="drawer-title" id="drawer-date-title">Log Entry</h2>
-          <button type="button" class="pill-btn" id="btn-close-drawer">Close</button>
-        </header>
+        <!-- Scalloped Custard Drawer Header + Live Pompompurin Reaction Cameo -->
+        <div class="drawer-header-wrap">
+          <div class="drawer-handle" aria-hidden="true"></div>
+          <header class="drawer-header">
+            <div class="drawer-header-left">
+              <div class="drawer-cameo" id="drawer-cameo-frame" aria-hidden="true">
+                <img
+                  src="assets/icons/pompom/pompom_waving.png"
+                  alt=""
+                  class="drawer-cameo-img"
+                  id="drawer-purin-cameo"
+                  width="44"
+                  height="44"
+                  draggable="false"
+                >
+              </div>
+              <div class="drawer-header-titles">
+                <h2 class="drawer-title" id="drawer-date-title">Log Entry</h2>
+                <p class="drawer-subtitle" id="drawer-cycle-subtitle">Daily Check-in</p>
+              </div>
+            </div>
+            <button type="button" class="drawer-close-pill" id="btn-close-drawer">Close</button>
+          </header>
+          <svg class="drawer-header-scallop" viewBox="0 0 430 14" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 0 H430 V5 Q408.5 14 387 5 Q365.5 14 344 5 Q322.5 14 301 5 Q279.5 14 258 5 Q236.5 14 215 5 Q193.5 14 172 5 Q150.5 14 129 5 Q107.5 14 86 5 Q64.5 14 43 5 Q21.5 14 0 5 Z" fill="#F7D358"/>
+            <path d="M0 5 Q21.5 14 43 5 Q64.5 14 86 5 Q107.5 14 129 5 Q150.5 14 172 5 Q193.5 14 215 5 Q236.5 14 258 5 Q279.5 14 301 5 Q322.5 14 344 5 Q365.5 14 387 5 Q408.5 14 430 5" fill="none" stroke="#4A3222" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
 
         <div class="drawer-body">
-          <!-- 1. Flow Intensity -->
-          <div class="drawer-section">
-            <h3 class="drawer-label">Flow Intensity</h3>
+          <!-- Bento Card 1: Flow Intensity (Single choice) -->
+          <section class="drawer-bento-card" aria-label="Flow Intensity">
+            <div class="drawer-bento-header">
+              <h3 class="drawer-bento-title">Flow Intensity</h3>
+              <span class="drawer-bento-hint">Single choice</span>
+            </div>
             <div class="segmented-bar" id="drawer-flow-group" role="radiogroup" aria-label="Flow intensity">
-              <button type="button" class="seg-btn seg-btn--active" data-flow="none">None</button>
-              <button type="button" class="seg-btn" data-flow="spotting">Spotting</button>
-              <button type="button" class="seg-btn" data-flow="light">Light</button>
-              <button type="button" class="seg-btn" data-flow="medium">Medium</button>
-              <button type="button" class="seg-btn" data-flow="heavy">Heavy</button>
+              <button type="button" class="seg-btn seg-btn--active" role="radio" aria-checked="true" data-flow="none">
+                <span class="seg-label">None</span>
+                <span class="seg-dots" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="seg-btn" role="radio" aria-checked="false" data-flow="spotting">
+                <span class="seg-label">Spotting</span>
+                <span class="seg-dots" aria-hidden="true">
+                  <span class="seg-dot"></span>
+                </span>
+              </button>
+              <button type="button" class="seg-btn" role="radio" aria-checked="false" data-flow="light">
+                <span class="seg-label">Light</span>
+                <span class="seg-dots" aria-hidden="true">
+                  <span class="seg-dot"></span>
+                  <span class="seg-dot"></span>
+                </span>
+              </button>
+              <button type="button" class="seg-btn" role="radio" aria-checked="false" data-flow="medium">
+                <span class="seg-label">Medium</span>
+                <span class="seg-dots" aria-hidden="true">
+                  <span class="seg-dot"></span>
+                  <span class="seg-dot"></span>
+                  <span class="seg-dot"></span>
+                </span>
+              </button>
+              <button type="button" class="seg-btn" role="radio" aria-checked="false" data-flow="heavy">
+                <span class="seg-label">Heavy</span>
+                <span class="seg-dots" aria-hidden="true">
+                  <span class="seg-dot"></span>
+                  <span class="seg-dot"></span>
+                  <span class="seg-dot"></span>
+                  <span class="seg-dot"></span>
+                </span>
+              </button>
             </div>
-          </div>
+          </section>
 
-          <!-- 2. Symptoms -->
-          <div class="drawer-section">
-            <h3 class="drawer-label">Symptoms</h3>
-            <div class="chip-grid" id="drawer-symptoms-group">
-              <button type="button" class="chip-btn" data-symptom="cramps">Cramps</button>
-              <button type="button" class="chip-btn" data-symptom="bloating">Bloating</button>
-              <button type="button" class="chip-btn" data-symptom="headache">Headache</button>
-              <button type="button" class="chip-btn" data-symptom="fatigue">Sleepy / Fatigue</button>
-              <button type="button" class="chip-btn" data-symptom="sweet_cravings">Sweet Cravings</button>
-              <button type="button" class="chip-btn" data-symptom="tender_breasts">Tender Breasts</button>
-              <button type="button" class="chip-btn" data-symptom="acne">Acne</button>
-              <button type="button" class="chip-btn" data-symptom="backache">Backache</button>
-              <button type="button" class="chip-btn" data-symptom="nausea">Nausea</button>
+          <!-- Bento Card 2: Symptoms (3 x 3 Uniform Matrix) -->
+          <section class="drawer-bento-card" aria-label="Symptoms">
+            <div class="drawer-bento-header">
+              <h3 class="drawer-bento-title">Symptoms</h3>
+              <span class="drawer-bento-hint">Multi-select</span>
             </div>
-          </div>
-
-          <!-- 3. Mood -->
-          <div class="drawer-section">
-            <h3 class="drawer-label">Mood</h3>
-            <div class="chip-grid" id="drawer-mood-group">
-              <button type="button" class="chip-btn" data-mood="calm">Calm</button>
-              <button type="button" class="chip-btn" data-mood="happy">Happy</button>
-              <button type="button" class="chip-btn" data-mood="sensitive">Sensitive</button>
-              <button type="button" class="chip-btn" data-mood="irritable">Irritable</button>
-              <button type="button" class="chip-btn" data-mood="low_energy">Low Energy</button>
+            <div class="symptom-matrix" id="drawer-symptoms-group">
+              <button type="button" class="chip-btn symptom-tile" data-symptom="cramps" aria-pressed="false">Cramps</button>
+              <button type="button" class="chip-btn symptom-tile" data-symptom="bloating" aria-pressed="false">Bloating</button>
+              <button type="button" class="chip-btn symptom-tile" data-symptom="headache" aria-pressed="false">Headache</button>
+              <button type="button" class="chip-btn symptom-tile" data-symptom="fatigue" aria-pressed="false">Sleepy / Fatigue</button>
+              <button type="button" class="chip-btn symptom-tile" data-symptom="sweet_cravings" aria-pressed="false">Sweet Cravings</button>
+              <button type="button" class="chip-btn symptom-tile" data-symptom="tender_breasts" aria-pressed="false">Tender Breasts</button>
+              <button type="button" class="chip-btn symptom-tile" data-symptom="acne" aria-pressed="false">Acne</button>
+              <button type="button" class="chip-btn symptom-tile" data-symptom="backache" aria-pressed="false">Backache</button>
+              <button type="button" class="chip-btn symptom-tile" data-symptom="nausea" aria-pressed="false">Nausea</button>
             </div>
-          </div>
+          </section>
 
-          <!-- 4. Biomarkers (Collapsible) -->
-          <details class="drawer-section drawer-collapsible">
-            <summary class="drawer-label drawer-summary">Biomarkers (Optional)</summary>
-            <div class="biomarkers-content">
-              <div class="sub-field">
-                <span class="sub-label">LH Test</span>
-                <div class="chip-grid" id="drawer-lh-group">
-                  <button type="button" class="chip-btn" data-lh="negative">Negative</button>
-                  <button type="button" class="chip-btn" data-lh="positive">Positive</button>
-                </div>
-              </div>
-              <div class="sub-field">
-                <span class="sub-label">Cervical Mucus</span>
-                <div class="chip-grid" id="drawer-mucus-group">
-                  <button type="button" class="chip-btn" data-mucus="dry">Dry</button>
-                  <button type="button" class="chip-btn" data-mucus="sticky">Sticky</button>
-                  <button type="button" class="chip-btn" data-mucus="creamy">Creamy</button>
-                  <button type="button" class="chip-btn" data-mucus="egg_white">Egg-White</button>
-                </div>
-              </div>
-              <div class="sub-field">
-                <label class="sub-label" for="drawer-bbt">BBT (°C)</label>
-                <input type="number" id="drawer-bbt" class="text-input text-input--compact tabular" step="0.01" min="34" max="42" placeholder="36.50">
-              </div>
+          <!-- Bento Card 3: Mood (5-Column Purin Expression Strip) -->
+          <section class="drawer-bento-card" aria-label="Mood">
+            <div class="drawer-bento-header">
+              <h3 class="drawer-bento-title">Mood</h3>
+              <span class="drawer-bento-hint">How you feel</span>
             </div>
-          </details>
+            <div class="mood-strip" id="drawer-mood-group">
+              <button type="button" class="chip-btn mood-tile" data-mood="calm" aria-pressed="false">
+                <svg class="mood-purin-svg" viewBox="0 0 28 28" width="22" height="22" aria-hidden="true">
+                  <!-- Floppy ears -->
+                  <path d="M6.5 13 C3.2 13.5 2 17.2 3.4 19.6 C4.4 21 6.4 20.4 7.2 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21.5 13 C24.8 13.5 26 17.2 24.6 19.6 C23.6 21 21.6 20.4 20.8 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Head -->
+                  <ellipse cx="14" cy="17.5" rx="7.8" ry="6.8" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75"/>
+                  <!-- Beret -->
+                  <ellipse cx="14" cy="10.2" rx="6.4" ry="2.8" fill="#6B4226" stroke="#4A3222" stroke-width="1.75"/>
+                  <line x1="14" y1="5.2" x2="14" y2="7.4" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <!-- Calm closed eyes & gentle smile -->
+                  <path d="M9.6 16.4 Q11 17.8 12.4 16.4" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <path d="M15.6 16.4 Q17 17.8 18.4 16.4" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <path d="M12.5 20.2 Q14 21.4 15.5 20.2" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                </svg>
+                <span class="mood-label">Calm</span>
+              </button>
 
-          <!-- 5. Private Note -->
-          <div class="drawer-section">
-            <label class="drawer-label" for="drawer-note">Private Note</label>
+              <button type="button" class="chip-btn mood-tile" data-mood="happy" aria-pressed="false">
+                <svg class="mood-purin-svg" viewBox="0 0 28 28" width="22" height="22" aria-hidden="true">
+                  <path d="M6.5 13 C3.2 13.5 2 17.2 3.4 19.6 C4.4 21 6.4 20.4 7.2 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21.5 13 C24.8 13.5 26 17.2 24.6 19.6 C23.6 21 21.6 20.4 20.8 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <ellipse cx="14" cy="17.5" rx="7.8" ry="6.8" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75"/>
+                  <ellipse cx="14" cy="10.2" rx="6.4" ry="2.8" fill="#6B4226" stroke="#4A3222" stroke-width="1.75"/>
+                  <line x1="14" y1="5.2" x2="14" y2="7.4" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <!-- Cheeks -->
+                  <circle cx="9.2" cy="19.2" r="1.4" fill="#F3B8B5"/>
+                  <circle cx="18.8" cy="19.2" r="1.4" fill="#F3B8B5"/>
+                  <!-- Happy eyes & bright smile -->
+                  <circle cx="11" cy="16.4" r="1.15" fill="#4A3222"/>
+                  <circle cx="17" cy="16.4" r="1.15" fill="#4A3222"/>
+                  <path d="M11.6 19.4 Q14 22.1 16.4 19.4" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                </svg>
+                <span class="mood-label">Happy</span>
+              </button>
+
+              <button type="button" class="chip-btn mood-tile" data-mood="sensitive" aria-pressed="false">
+                <svg class="mood-purin-svg" viewBox="0 0 28 28" width="22" height="22" aria-hidden="true">
+                  <path d="M6.5 13 C3.2 13.5 2 17.2 3.4 19.6 C4.4 21 6.4 20.4 7.2 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21.5 13 C24.8 13.5 26 17.2 24.6 19.6 C23.6 21 21.6 20.4 20.8 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <ellipse cx="14" cy="17.5" rx="7.8" ry="6.8" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75"/>
+                  <ellipse cx="14" cy="10.2" rx="6.4" ry="2.8" fill="#6B4226" stroke="#4A3222" stroke-width="1.75"/>
+                  <line x1="14" y1="5.2" x2="14" y2="7.4" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <!-- Teary eyes + tiny teardrop + wavy mouth -->
+                  <circle cx="11" cy="16.4" r="1.15" fill="#4A3222"/>
+                  <circle cx="17" cy="16.4" r="1.15" fill="#4A3222"/>
+                  <path d="M9.1 18.2 C8.7 19.1 9.5 19.8 10 19.1" fill="none" stroke="#4A3222" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M11.6 20.6 Q12.8 19.5 14 20.6 Q15.2 21.6 16.4 20.6" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                </svg>
+                <span class="mood-label">Sensitive</span>
+              </button>
+
+              <button type="button" class="chip-btn mood-tile" data-mood="irritable" aria-pressed="false">
+                <svg class="mood-purin-svg" viewBox="0 0 28 28" width="22" height="22" aria-hidden="true">
+                  <path d="M6.5 13 C3.2 13.5 2 17.2 3.4 19.6 C4.4 21 6.4 20.4 7.2 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21.5 13 C24.8 13.5 26 17.2 24.6 19.6 C23.6 21 21.6 20.4 20.8 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <ellipse cx="14" cy="17.5" rx="7.8" ry="6.8" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75"/>
+                  <ellipse cx="14" cy="10.2" rx="6.4" ry="2.8" fill="#6B4226" stroke="#4A3222" stroke-width="1.75"/>
+                  <line x1="14" y1="5.2" x2="14" y2="7.4" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <!-- Furrowed brow + frown -->
+                  <line x1="9.6" y1="14.7" x2="12.6" y2="15.9" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <line x1="18.4" y1="14.7" x2="15.4" y2="15.9" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <circle cx="11" cy="17.3" r="1.05" fill="#4A3222"/>
+                  <circle cx="17" cy="17.3" r="1.05" fill="#4A3222"/>
+                  <path d="M12.2 21 Q14 19.6 15.8 21" fill="none" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                </svg>
+                <span class="mood-label">Irritable</span>
+              </button>
+
+              <button type="button" class="chip-btn mood-tile" data-mood="low_energy" aria-pressed="false">
+                <svg class="mood-purin-svg" viewBox="0 0 28 28" width="22" height="22" aria-hidden="true">
+                  <path d="M6.5 13 C3.2 13.5 2 17.2 3.4 19.6 C4.4 21 6.4 20.4 7.2 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21.5 13 C24.8 13.5 26 17.2 24.6 19.6 C23.6 21 21.6 20.4 20.8 18.2" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                  <ellipse cx="14" cy="17.5" rx="7.8" ry="6.8" fill="#FFF7D6" stroke="#4A3222" stroke-width="1.75"/>
+                  <ellipse cx="14" cy="10.2" rx="6.4" ry="2.8" fill="#6B4226" stroke="#4A3222" stroke-width="1.75"/>
+                  <line x1="14" y1="5.2" x2="14" y2="7.4" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <!-- Droopy sleepy eyes & flat tired mouth -->
+                  <line x1="9.6" y1="16.8" x2="12.4" y2="17.3" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <line x1="18.4" y1="16.8" x2="15.6" y2="17.3" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                  <line x1="12.6" y1="20.6" x2="15.4" y2="20.6" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+                </svg>
+                <span class="mood-label">Low Energy</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Bento Card 4: Private Note (Local AES-256) -->
+          <section class="drawer-bento-card" aria-label="Private Note">
+            <div class="drawer-bento-header">
+              <label class="drawer-bento-title" for="drawer-note">Private Note</label>
+              <span class="drawer-lock-badge" aria-label="Encrypted locally">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="4" y="11" width="16" height="10" rx="2.5"/>
+                  <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                </svg>
+                <span>Local</span>
+              </span>
+            </div>
             <textarea id="drawer-note" class="note-input" rows="2" placeholder="Encrypted locally on your device..."></textarea>
-          </div>
+          </section>
         </div>
 
         <footer class="drawer-footer">
-          <button type="button" class="btn-primary-full" id="btn-save-log">Save Entry</button>
+          <button type="button" class="btn-save-entry" id="btn-save-log">
+            <svg class="btn-save-beret" viewBox="0 0 28 20" width="22" height="16" aria-hidden="true">
+              <ellipse cx="14" cy="13" rx="11" ry="5" fill="#6B4226" stroke="#4A3222" stroke-width="1.75"/>
+              <path d="M5 12 C6.5 6.5 10 5 14 5 C18 5 21.5 6.5 23 12" fill="#6B4226" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+              <line x1="14" y1="2" x2="14" y2="5" stroke="#4A3222" stroke-width="1.75" stroke-linecap="round"/>
+            </svg>
+            <span>Save Entry</span>
+          </button>
         </footer>
       </aside>
 
