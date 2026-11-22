@@ -185,8 +185,6 @@ const MONTH_SHORT = [
 const dom = {
   appShell: document.getElementById('app-shell'),
   splash: document.getElementById('splash-screen'),
-  splashMascotWrap: document.getElementById('splash-mascot-wrap'),
-  splashSoundCue: document.getElementById('splash-sound-cue'),
 
   // PIN Gate
   pinGate: document.getElementById('pin-gate'),
@@ -413,9 +411,6 @@ function dismissSplash(immediate = false) {
   if (uiState.splashDismissed) return;
   uiState.splashDismissed = true;
   soundEngine.stopIntroJingle();
-  if (dom.splashSoundCue) {
-    dom.splashSoundCue.hidden = true;
-  }
   uiState.splashTimers.forEach((id) => clearTimeout(id));
   uiState.splashTimers = [];
 
@@ -432,40 +427,27 @@ function dismissSplash(immediate = false) {
 }
 
 function initSplash() {
-  let introStarted = soundEngine.playIntroJingle();
-  let swallowNextClick = false;
-
-  if (!introStarted && dom.splashSoundCue) {
-    dom.splashSoundCue.hidden = false;
-  }
+  const splashStartedAt = performance.now();
+  soundEngine.playIntroJingle(0);
 
   const finishTimer = setTimeout(() => dismissSplash(true), SPLASH_FADE_MS);
   uiState.splashTimers.push(finishTimer);
 
-  dom.splash.addEventListener(
+  // Silent, UI-free fallback if iOS Safari suspends AudioContext until first touch
+  document.addEventListener(
     'pointerdown',
     () => {
       if (uiState.splashDismissed) return;
-      soundEngine.unlock();
-      if (dom.splashSoundCue) {
-        dom.splashSoundCue.hidden = true;
-      }
-      if (!introStarted) {
-        introStarted = soundEngine.playIntroJingle({ fromGesture: true });
-        swallowNextClick = true;
-        triggerJellyPop(dom.splashMascotWrap);
+      const elapsed = (performance.now() - splashStartedAt) / 1000;
+      if (!soundEngine.isAudioUnlocked() && elapsed < 4.2) {
+        soundEngine.unlock();
+        soundEngine.playIntroJingle(elapsed);
       }
     },
-    { once: true }
+    { once: true, passive: true }
   );
 
-  dom.splash.addEventListener('click', () => {
-    if (swallowNextClick) {
-      swallowNextClick = false;
-      return;
-    }
-    dismissSplash(true);
-  });
+  dom.splash.addEventListener('click', () => dismissSplash(true));
   dom.splash.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();

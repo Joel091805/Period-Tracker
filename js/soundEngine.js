@@ -48,6 +48,7 @@ class PurinSoundEngine {
     this.activeBgmNodes = new Set();
 
     this.isIntroPlaying = false;
+    this.introAborted = false;
     this.introGain = null;
     this.introEndTimer = null;
     this.activeIntroNodes = new Set();
@@ -400,49 +401,61 @@ class PurinSoundEngine {
     };
   }
 
-  playIntroJingle({ fromGesture = false } = {}) {
+  playIntroJingle(elapsedSeconds = 0) {
     if (this.isIntroPlaying || !this.sfxEnabled) return false;
+    const offset = Math.max(0, Number(elapsedSeconds) || 0);
+    if (offset >= 4.85) return false;
+
     const ctx = this._ensureContext();
     if (!ctx) return false;
 
-    if (ctx.state === 'suspended') {
-      const resumePromise = ctx.resume().catch(() => {});
-      if (fromGesture) {
-        this.isIntroPlaying = true;
-        resumePromise.then(() => {
-          if (!this.isIntroPlaying || !this.sfxEnabled || ctx.state !== 'running') {
-            this.isIntroPlaying = false;
-            return;
-          }
-          this._scheduleIntroSequence(ctx);
-        });
-        return true;
-      }
-      if (ctx.state !== 'running') {
-        return false;
-      }
+    this.introAborted = false;
+
+    if (ctx.state === 'running') {
+      this.isIntroPlaying = true;
+      this._scheduleIntroSequence(ctx, offset);
+      return true;
     }
 
-    if (ctx.state !== 'running') return false;
+    // Attempt immediate resume; if browser policy allows or user gesture unlocks, schedule cleanly
+    ctx
+      .resume()
+      .then(() => {
+        if (this.introAborted || this.isIntroPlaying || !this.sfxEnabled) return;
+        if (ctx.state === 'running') {
+          this.isIntroPlaying = true;
+          this._scheduleIntroSequence(ctx, offset);
+        }
+      })
+      .catch(() => {});
 
-    this.isIntroPlaying = true;
-    this._scheduleIntroSequence(ctx);
-    return true;
+    return false;
   }
 
-  _scheduleIntroSequence(ctx) {
+  _scheduleIntroSequence(ctx, elapsedSeconds = 0) {
+    const offset = Math.max(0, Number(elapsedSeconds) || 0);
+    if (offset >= 4.85) {
+      this.isIntroPlaying = false;
+      return;
+    }
+
     const now = ctx.currentTime;
+    const fadeStart = Math.max(0, 3.6 - offset);
+    const fadeEnd = Math.max(fadeStart + 0.15, 4.85 - offset);
+
     const introGain = ctx.createGain();
     introGain.gain.setValueAtTime(1.0, now);
-    introGain.gain.setValueAtTime(1.0, now + 3.6);
-    introGain.gain.linearRampToValueAtTime(0.0001, now + 4.85);
-    introGain.gain.setValueAtTime(0, now + 4.88);
+    if (fadeStart > 0) {
+      introGain.gain.setValueAtTime(1.0, now + fadeStart);
+    }
+    introGain.gain.linearRampToValueAtTime(0.0001, now + fadeEnd);
+    introGain.gain.setValueAtTime(0, now + fadeEnd + 0.03);
     introGain.connect(this.sfxGain || ctx.destination);
     this.introGain = introGain;
 
     // Beat 1 (+0.05s — Custard Swirl): Soft triangle swell C4 -> G4 through 1200Hz LPF (0.4s)
-    {
-      const t = now + 0.05;
+    if (0.05 - offset >= -0.05) {
+      const t = now + Math.max(0, 0.05 - offset);
       const osc = ctx.createOscillator();
       const filter = ctx.createBiquadFilter();
       const gain = ctx.createGain();
@@ -469,8 +482,8 @@ class PurinSoundEngine {
     }
 
     // Beat 2 (+0.48s — Pudding Jelly Pop-Out): Elastic pitch bounce + crisp 820Hz bubble pop
-    {
-      const t = now + 0.48;
+    if (0.48 - offset >= -0.05) {
+      const t = now + Math.max(0, 0.48 - offset);
       const jellyOsc = ctx.createOscillator();
       const jellyGain = ctx.createGain();
 
@@ -512,44 +525,44 @@ class PurinSoundEngine {
     }
 
     // Beat 3 (+1.15s — 5-Note Celesta Brand Jingle + gentle Cmaj9 sine pad)
-    {
-      const t = now + 1.15;
-
-      // Gentle Cmaj9 pad (C4, E4, G4, B4, D5) at gain ~0.035 total
+    if (offset < 4.2) {
+      const padStart = now + Math.max(0, 1.15 - offset);
+      const padDur = Math.max(0.35, 4.65 - Math.max(1.15, offset));
       const padFreqs = [261.63, 329.63, 392.0, 493.88, 587.33];
       const padBus = ctx.createGain();
-      padBus.gain.setValueAtTime(0.0001, t);
-      padBus.gain.linearRampToValueAtTime(0.035, t + 0.28);
-      padBus.gain.setValueAtTime(0.035, t + 2.2);
-      padBus.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
+      padBus.gain.setValueAtTime(0.0001, padStart);
+      padBus.gain.linearRampToValueAtTime(0.035, padStart + Math.min(0.28, padDur * 0.25));
+      padBus.gain.setValueAtTime(0.035, padStart + padDur * 0.65);
+      padBus.gain.exponentialRampToValueAtTime(0.0001, padStart + padDur);
       padBus.connect(introGain);
 
       padFreqs.forEach((freq) => {
         const osc = ctx.createOscillator();
         const voiceGain = ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, t);
+        osc.frequency.setValueAtTime(freq, padStart);
         voiceGain.gain.value = 1 / padFreqs.length;
 
         osc.connect(voiceGain);
         voiceGain.connect(padBus);
 
         this._trackIntroOsc(osc);
-        osc.start(t);
-        osc.stop(t + 3.55);
+        osc.start(padStart);
+        osc.stop(padStart + padDur + 0.05);
       });
 
       // 5-Note Celesta Melody: E5, G5, A5, G5, C6 at 0.28s spacing (C6 rings 0.9s)
       const melody = [
-        { freq: 659.25, offset: 0.0, dur: 0.34 },
-        { freq: 783.99, offset: 0.28, dur: 0.34 },
-        { freq: 880.0, offset: 0.56, dur: 0.34 },
-        { freq: 783.99, offset: 0.84, dur: 0.34 },
-        { freq: 1046.5, offset: 1.12, dur: 0.9 },
+        { freq: 659.25, at: 1.15, dur: 0.34 },
+        { freq: 783.99, at: 1.43, dur: 0.34 },
+        { freq: 880.0, at: 1.71, dur: 0.34 },
+        { freq: 783.99, at: 1.99, dur: 0.34 },
+        { freq: 1046.5, at: 2.27, dur: 0.9 },
       ];
 
-      melody.forEach(({ freq, offset, dur }) => {
-        const start = t + offset;
+      melody.forEach(({ freq, at, dur }) => {
+        if (at - offset < -0.05) return;
+        const start = now + Math.max(0, at - offset);
         const osc = ctx.createOscillator();
         const bell = ctx.createOscillator();
         const bellGain = ctx.createGain();
@@ -584,7 +597,9 @@ class PurinSoundEngine {
     {
       const sparkles = [1318.51, 1567.98, 1975.53];
       sparkles.forEach((freq, idx) => {
-        const start = now + 2.95 + idx * 0.12;
+        const at = 2.95 + idx * 0.12;
+        if (at - offset < -0.05) return;
+        const start = now + Math.max(0, at - offset);
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
@@ -607,14 +622,16 @@ class PurinSoundEngine {
     if (this.introEndTimer !== null) {
       window.clearTimeout(this.introEndTimer);
     }
+    const remainingMs = Math.max(200, Math.round((fadeEnd + 0.1) * 1000));
     this.introEndTimer = window.setTimeout(() => {
       this.introEndTimer = null;
       this.isIntroPlaying = false;
       this.introGain = null;
-    }, 4950);
+    }, remainingMs);
   }
 
   stopIntroJingle() {
+    this.introAborted = true;
     if (this.introEndTimer !== null) {
       window.clearTimeout(this.introEndTimer);
       this.introEndTimer = null;
@@ -634,6 +651,7 @@ class PurinSoundEngine {
     gainParam.cancelScheduledValues(now);
     gainParam.setValueAtTime(Math.max(0.0001, gainParam.value), now);
     gainParam.linearRampToValueAtTime(0.0001, now + 0.15);
+    gainParam.setValueAtTime(0, now + 0.155);
 
     const stopAt = now + 0.17;
     this.activeIntroNodes.forEach((osc) => {
